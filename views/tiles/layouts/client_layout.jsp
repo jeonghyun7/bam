@@ -1,4 +1,5 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"
+isELIgnored="false" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 
@@ -14,7 +15,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge, chrome=1">
 
     <!-- Favicon -->
-    <link rel="icon" href="/images/favicon.png" type="image/x-icon">
+    <link rel="icon" href="<c:url value='/images/favicon.png' /> " type="image/x-icon">
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Work+Sans:100,200,300,400,500,600,700,800&display=swap" rel="stylesheet">
@@ -22,22 +23,24 @@
 	<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
 	
     <!-- Template CSS Files -->
-    <link rel="stylesheet" href="/resources/css/bootstrap.min.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/font-awesome.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/line-awesome.css?ver=<%=System.currentTimeMillis()%>">
-	<link rel="stylesheet" href="/resources/css/owl.carousel.min.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/owl.theme.default.min.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/magnific-popup.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/animated-headline.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/daterangepicker.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/jquery-ui.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/jquery.filer.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/jquery.filer-dragdropbox-theme.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/select2.min.css?ver=<%=System.currentTimeMillis()%>">
-    <link rel="stylesheet" href="/resources/css/style.css?ver=<%=System.currentTimeMillis()%>">
-    <script src="/resources/js/modernizr.js?ver=<%=System.currentTimeMillis()%>"></script> <!-- Modernizr -->
+    <link rel="stylesheet" href="resources/css/bootstrap.min.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/font-awesome.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/line-awesome.css?ver=<%=System.currentTimeMillis()%>">
+	<link rel="stylesheet" href="resources/css/owl.carousel.min.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/owl.theme.default.min.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/magnific-popup.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/animated-headline.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/daterangepicker.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/jquery-ui.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/jquery.filer.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/jquery.filer-dragdropbox-theme.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/select2.min.css?ver=<%=System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="resources/css/style.css?ver=<%=System.currentTimeMillis()%>">
+    <script src="resources/js/modernizr.js?ver=<%=System.currentTimeMillis()%>"></script> <!-- Modernizr -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js?ver=<%=System.currentTimeMillis()%>"></script><!--jquery-->
-	<script>
+    
+    <script>
+	
 	  window.fbAsyncInit = function() {
 	    FB.init({
 	      appId      : '306095397264311',
@@ -55,9 +58,11 @@
 	     fjs.parentNode.insertBefore(js, fjs);
 	   }(document, 'script', 'facebook-jssdk'));
 	</script>
+	
 </head>
-  
+ 
 <body onbeforeunload="handleBrowserCloseButton(event);">
+
     <header id="header">
         <tiles:insertAttribute name="header" />
     </header>

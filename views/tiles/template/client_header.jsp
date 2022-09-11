@@ -1,9 +1,11 @@
-<%@ page pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"
+isELIgnored="false" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+
 <%
 	request.setCharacterEncoding("UTF-8");
 %>
-<c:set var="ctx" value="${pageContext.request.contextPath}" />
+<c:set var="contextPath" value="${pageContext.request.contextPath}" />
 
 <!-- start per-loader -->
 <div class="loader-container">
@@ -26,7 +28,7 @@
                 <div class="col-lg-12">
                     <div class="menu-full-width">
                         <div class="logo">
-                            <a href="${pageContext.request.contextPath}/"><img src="/images/logo.png" alt="logo"></a>
+                            <a href="${pageContext.request.contextPath}/"><img src="<c:url value='/images/logo.png' /> " alt="logo"></a>
                         </div><!-- end logo -->
 						<div class="main-menu-content">
 						</div>
@@ -54,7 +56,7 @@
             </div>
             <c:if test="${member == null }">
             	<div>
-            	<img src="/images/logo2.png" style="padding-left:15px">
+            	<img src="<c:url value='/images/logo2.png' /> " style="padding-left:15px">
             	</div>
             	</c:if>
             <ul class="side-menu-ul">

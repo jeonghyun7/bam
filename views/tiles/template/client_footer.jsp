@@ -1,9 +1,11 @@
-<%@ page pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"
+isELIgnored="false" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+
 <%
 	request.setCharacterEncoding("UTF-8");
 %>
-<c:set var="ctx" value="${pageContext.request.contextPath}" />
+<c:set var="contextPath" value="${pageContext.request.contextPath}" />
 <!-- ================================
        START FOOTER AREA
 ================================= -->
@@ -20,7 +22,7 @@
             <div class="col-lg-3 column-td-6">
                 <div class="footer-item">
                     <div class="logo">
-                        <a href="index.html" class="foot-logo"><img src="/images/logo.png" alt="logo"></a>
+                        <a href="index.html" class="foot-logo"><img src="<c:url value='/images/logo.png' /> " alt="logo"></a>
                         <p class="footer__desc">
                             WeCamp -- We provides camping reservation. and We also offer camping information and community
                         </p>
@@ -109,23 +111,23 @@
 </div>
 <!-- end back-to-top -->
 
-<!-- Template JS Files-->
-<script src="/resources/js/browser-close.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/jquery.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/jquery-ui.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/popper.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/bootstrap.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/owl.carousel.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/jquery.magnific-popup.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/isotope-3.0.6.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/animated-headline.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/select2.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/moment.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/daterangepicker.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/waypoints.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/jquery.counterup.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/jquery.show-more.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/jquery-rating.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/jquery.filer.min.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/smooth-scrolling.js?ver=<%=System.currentTimeMillis()%>"></script>
-<script src="/resources/js/main.js?ver=<%=System.currentTimeMillis()%>"></script>
+<!-- Template JS Files -->
+<script src="resources/js/browser-close.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/jquery.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/jquery-ui.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/popper.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/bootstrap.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/owl.carousel.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/jquery.magnific-popup.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/isotope-3.0.6.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/animated-headline.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/select2.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/moment.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/daterangepicker.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/waypoints.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/jquery.counterup.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/jquery.show-more.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/jquery-rating.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/jquery.filer.min.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/smooth-scrolling.js?ver=<%=System.currentTimeMillis()%>"></script>
+<script src="resources/js/main.js?ver=<%=System.currentTimeMillis()%>"></script>

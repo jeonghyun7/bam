@@ -23,16 +23,18 @@
 		<put-attribute name="title" value="위캠프 :: 최고의 캠핑 사이트" />
 		<put-attribute name="body" value="/WEB-INF/views/index.jsp" />
 	</definition>	
-	<!-- 정현수정 
-	<definition name="client/*/*/*" extends="client-layout">
+<!-- 
+	<definition name="client/*/*" extends="client-layout">
 		<put-attribute name="title" value="{3}" />
 		<put-attribute name="body" value="/WEB-INF/views/client/{1}/{2}.jsp" />
 	</definition>
-	 -->
-	 <definition name="/client/*/*" extends="client-layout">
-		<put-attribute name="title" value="화면띄우기는성공?!" />
+ -->	 
+	 
+	 <definition name="client/*/*" extends="client-layout">
+		<put-attribute name="title" value="{3}" />
 		<put-attribute name="body" value="/WEB-INF/views/client/{1}/{2}.jsp" />
 	</definition>
+	
 	<definition name="admin/*/*/*" extends="admin-layout">
 		<put-attribute name="title" value="{3}"/>
 		<put-attribute name="body" value="/WEB-INF/views/admin/{1}/{2}.jsp"/>

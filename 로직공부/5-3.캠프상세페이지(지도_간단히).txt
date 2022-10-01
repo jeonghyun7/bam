@@ -1,0 +1,34 @@
+#캠프상세페이지(camp_detail.jsp)#
+
+1. 캠핑장 위치(지도)
+
+<div class="listing-map gmaps">
+	<h2 class="widget-title">캠핑장 위치</h2>
+	<div class="title-shape margin-bottom-35px"></div>
+	<div id="map">
+	<script type="text/javascript"
+	src="//dapi.kakao.com/v2/maps/sdk.js?appkey=66a049934e202dc222891359d78e3dab&libraries=services">
+	</script>
+	</div>
+	</div>
+해당구문 부분에 지도가 뜨게 되는데 로직을 알기 위해서는 kakao-map.js파일을 살펴보아야한다.
+
+(1)kakao-map.js
+
+function setLocation(){
+	address = document.getElementById("address").value;
+	campName = document.getElementById("campName").value;
+}
+window.onload = setLocation();
+해당구문을 통해 캠핑장의 주소와 캠핑장이름 value를 address 변수와 campName변수에 저장하고,
+window.onload를 통하여 window로드시 위의 함수 스크립트가 저장됩니다.
+@@알아두기@
+window.onload : 최종 실행 시 브라우저 내의 모든 요소가 준비되면 호출되며, 등록된 이벤트는 상시 대기를 수행합니다.
+
+지도를 표시할 div설정하고 지도의 기본 중심좌표를 세팅하고 지도를 생성한뒤에
+주소-좌표 변환 객체인 geocoder를 생성하고
+나머지는 주석이 달린 내용들처럼 주소를 통하여 좌표를 검색하고 
+정상적으로 검색이 완료되었으면 결과값으로 받은 위치를 마커로 표시하며,
+인포윈도우를 통하여 장소에 대한 설명을 표시하고
+지도의 중심을 결과값으로 받은 위치로 이동시키게 됩니다.
+

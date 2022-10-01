@@ -1,0 +1,88 @@
+#캠프상세페이지(camp_detail.jsp)#
+
+1. 갤러리부분.
+(1)camp_detail.jsp
+<c:forEach items="${ImgDetailList}" var="campDetailImg">
+    <div data-dot="<img src='/images/camp-img/detail/${campDetailImg.fname}'>"class="gallery-item">
+	<img src="/images/camp-img/detail/${campDetailImg.fname}" alt="gallery-image">
+     </div>
+</c:forEach>
+
+forEach 반복문을 돌면서 ImgDetailList에 담겨있는 모든 이미지fname을 ${campDetailImg.fname}에 담습니다.
+
+data-dot을 통하여 원래는 슬라이더밑의 점으로 표시되는 부분에 이미지들을 넣는 것을 알수있습니다.
+이어서 슬라이드기능을 확인하기위해 
+
+(2) main.js 를 살펴봐보자.
+
+ $('.gallery-carousel').owlCarousel({
+            loop: true,
+            items: 1,
+            nav: true,
+            dots: true,
+            smartSpeed: 700,
+            autoplay: false,
+            dotsData: true,
+            navText: ["<span class=\"la la-chevron-left\"></span>", "<span class=\"la la-chevron-right\"></span>"]
+        });
+@@@알아두기@@@
+$() 함수는 선택된 HTML 요소를 제이쿼리에서 이용할 수 있는 형태로 생성해 주는 역할을 합니다.
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+제이쿼리를 통하여 카로셀 슬라이드 기능을 사용함을 알 수 있다. 
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+2. 캠핑 사이트(구역) 부분
+(1) camp_detail.jsp의 이미지 태그를 살펴보면 url이 아닌 src부분에 아주 긴 코드로 작성되어있는 것을 볼 수 있다.
+<img
+  src="data:image/png;base64, (집모양 png파일임)
+
+ @@@@@@@@@@알고넘어가기@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+data:image/png;base64와 같은 형태
+이미지를 base64인코딩 방식으로 사용한다는것인데,
+*크기가 작은 이미지를 이미지 파일없이 html에 만들어 넣는다거나
+*간단한 페이지를 작성해 임시로 이미지를 사용하는 경우
+*메일을 html으로 작성해서 보내는 경우 에 사용한다.
+장점으로는 
+서버에 이미지를 넣지 않아도 되므로 간단한 구현이 가능하다.
+렌더시, 문서로딩과 같이 로딩되기에 끊기지 않고 불려온다.
+
+Base 64 는 데이터를 64진법 으로 나타내는 것으로,
+0부터 63까지 ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ 으로 나타낸다.
+
+A-Z,a-z,0–9,/+ 만을 사용하기 때문에,
+문자 포맷이 달라 데이터를 손상시킬 수있는 시스템 간에 안정적으로 전송 될 수 있다.
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+(2) 각각의 사이트(구역) 사진을 클릭하게 되면 onclick="selectSite((${j})" 이벤트가 발생하게 되며
+select-site.js 안의 
+function selectSite(index){ 스크립트가 시작된다.
+            $('#booking-event').empty();
+	$('#booking-event').append("예약하기");
+해석해보면 사진 클릭후 첫번째로 
+id값이 booking-event곳에 들어있는 글인 캠핑장을 선택해주세요 를 비워주고
+예약하기 라는 글을 나타낸다.
+그리고 인원수가 1명이상이고 예약가능하면 auto로 예약버튼을 활성화 한다.
+
+imgs를 포함한 8개 각각의 컬럼에 클릭한 사진컬럼값을 innerHTML형태로 넣는다.
+
+그값들을 포함한 imgs의 html코드 변수인 imgs_html에 모두 넣어주고
+
+$("#selectedImg").html(imgs_html); 해당구문을 통하여 사이드바의
+ id값이 selectedImg곳에 해당img를 나타내줌을 알 수 있다.
+
+그이후 selectedBody_html에는 이미지 옆의 사진에 대한 정보(캠핑장이름,카테고리,캠프존,요금,최대인원)등을 담고
+checkBox_html에는 바비큐 관련된 값들을 담는다.
+
+그후 
+$("#selectedBody").html(selectedBody_html);
+$(".customize-checkbox").html(checkBox_html);
+구문을 통해 사이드바의 selectedBody와 customize-checkbox부분에 나타내준다.
+
+----------------------------------------------------------------------------------------------------------------------------
+
+3. 시설이용 부분
+
+CampDetailServiceImpl -> CampDetailController -> camp_detail.jsp을 통해 저장된 allConvList를 conv로 명명해서
+c:foreach items="${allConvList}" var="conv" 요런식으로 foreach 구문을 돌려 전기시설, 소화기, 하수도시설 등등으로
+뽑아 내준다.

@@ -1,0 +1,69 @@
+#캠프상세페이지(camp_detail.jsp)#
+
+1. 캠핑장위치.
+
+(1)camp_detail.jsp에 받아온 address, campName를 이용해 
+
+(2)kakao-map.js에서 setLocation()함수를 실행시키고
+camp_detail.jsp의 <div id="map">에 걸려있는 map을 kakao-map.js에서 var mapContainer = document.getElementById('map')를 통해
+지도를 생성한다. 우리가 사용하는 kakaoAPI는 주소를 좌표로 검색해주는 로직인 geocoder를 
+사용해 x,y 좌표를 뽑아내서
+지도에 marker로 표시해주는데 여기서 사용된 x,y 좌표는 날씨API,주변관광지API에서 사용되므로 주의깊에 볼것.
+
+2. 날씨.
+
+날씨는 openweathermap이라는 외국 API를 사용하는데 무료로 이용할수있는 서비스는 한정적이지만 무엇보다 무료라서 사용.
+일일 예보는 유료라서 사용안하고 무료인 시간별 예보로 대체해 기온과 강수확률을 뽑아낸것.
+
+camp_detail.jsp 밑단 살펴보면 <script src="/js/kakako-map.js"></script>라고 스크립트로 js 먹여놓았음.
+kakako-map.js들어가서 보면 $.getJSON 방식으로 정보 받아와서 camp_detail.jsp에서 id=date,hour,cicon,ctemp,pop으로
+id 걸어놓고 $.getJSON으로 받은 정보들을 꺼내씀 우리는 기온과 강수확률 뽑아 사용.
+
+date(날짜) / hour(시간) / cicon(날씨아이콘) / ctemp(기온) / pop(강수확률)
+----------------------------------------------------------------------------------------------------
+@@@@@@@@@@알아두기@@@@@@@@@@@@
+
+(1)get.JSON안의 https:로 시작되는 url에서 위도( Latitude ), 경도( Longitude )는 
+약어로 프로그램 코딩상에서 Lat, Lng 으로 줄여서 쓰기도 한다.
+(2)units : 온도의 단위를 설정한다. metric은 섭씨이다. 우리가 사용~
+---------------------------------------------------------------------------------------------------
+$.getJSON 방식으로 뽑아올때 url살펴보면 forecast?lat='+y+'&lon='+x+' 형식으로 x,y 변수가 url에 포함되어있는것을
+확인할 수 있는데 여기서 사용된 x,y는 카카오API에서 뽑아온 x,y좌표를 사용해 그 지역의 날씨를 설정해주는것.
+날씨 정보에서 기온을 섭씨 기준으로 받을 것이기 때문에 쿼리파라미터에 &units=metric 추가
+
+3. 리뷰.
+
+아직 우리가 완벽한 구현을 하지 않았기때문에 넘어가주겠어.
+
+4. 주변 관광지.
+camp_detail.jsp에서 주변 관광지 부분을 살펴보면 <div id="tour" class="col-lg-12">이라고 꼴랑 id로 tour만 걸어줘서
+연결고리가 찾기가 쉽지않음. 그도그럴게 이걸 스므뚜하게 연결시키려면 kakao-map.js를 먼저 살펴봐야하는데 이미
+(1). 캠핑장위치에서 카카오API 실행될때 getTourist();라는 함수가 실행되서 주변관광지가 구현이 된다. 여기서 다시 getTourist();를
+찾아 들어가보면 custom-tourist.js로 들어가지는데 앞에서 받은 위치 좌표 x,y를 가지고 ajax로 ./tourist로 맵핑을 쏴주면
+CampDetailController -> CampDetailService 타고가서 ModelAndView mv = new ModelAndView("client/camp/tourist_page");
+라고 mv저장소 에다가 tourist_page.jsp를 tiles / 반환할페이지 설정해주고 로직을 잔뜩 굴린다.
+
+우선 ArrayList<TouristVo> list = new ArrayList<TouristVo>(); 를 ArrayList 형태로 객체선언해주고
+주변 관광지 정보를 list형태로 키,값 저장해주는데 String uri에다가 발급받은 토큰도 집어넣고 카카오API에서 받은
+x,y 좌표도 집어넣고 contentTypeId=15라고 15는 박람회/축제를 찾아주는 식별번호도 넣어주면
+그 밑에  DocumentBuilderFactory 이런 식으로 처음보는 객체형태들이 나오는데 얘네들은 모두 xml 파싱구문으로
+xml 문서를 읽을 수 있도록 도와준다 정도로만 이해하면 인생 안피곤할덧ㅋ.
+그리고 쭉쭉 로직타고 가다보면 최종적으로 list값을 tourMap키를 이용해
+
+(list에 담긴 것은 알겠지만 사진 , 제목, 주소, 전화번호 정도~)
+
+mv.addObject("tourMap", list); -> return mv; -> tourist_page.jsp에 쏴주징
+최종적으로 tourist_page.jsp가 tiles먹어서 camp_detail.jsp에 주변 축제/박람회 구역에 나타나지는거임.
+
+custom-tourist.js의 $("#tour").html(data);구문이 연결고리 역할이 된다.
+
+결론은 kakaoAPI로 뽑아낸 캠핑장의 x,y 좌표를 이용해 주변 축제/박람회를 구현.
+해당 관광지 클릭시 상세정보 띄우고 싶었으나 공공API에서는 제공 안해주는 기능이라 관광지 클릭시 링크로 NAVER검생창으로
+넘어갈 수 있게끔 <a href="https://search.naver.com/search.naver?
+sm=top_hty&fbm=1&ie=utf8&query=${tour.title}" target="_blank" class="card-image-wrap">
+<img src="${tour.img}" class="card__img" style="height:250px" alt=""></a> 이런식으로 a태그 걸어서 직접 쏴줬징.
+
+
+
+
+

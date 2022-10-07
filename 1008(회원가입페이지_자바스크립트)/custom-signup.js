@@ -64,31 +64,6 @@
       }
     }    
     
- // 비밀번호 재확인 스크립트
-    $(function(){
-        $("#alert-success").hide();
-        $("#alert-danger").hide();
-        $("#pwd-danger").hide();
-        $("#pwdCheck").blur(function(){
-	console.log("1");
-            var pwd=$("#pwd").val();
-            var pwdCheck=$("#pwdCheck").val();
-            if(pwd != "" || pwdCheck != ""){
-                if(pwd == pwdCheck){
-                	console.log("2");
-                    $("#alert-success").show();
-                    $("#alert-danger").hide();
-                    $("#submit").removeAttr("disabled");
-                }else{
-                	console.log("3");
-                    $("#alert-success").hide();
-                    $("#alert-danger").show();
-                    $("#submit").attr("disabled", "disabled");
-                }    
-            }
-        });
-    });
-
  // 비밀번호 정규식활용 유효성 
  // 비밀번호 패턴 체크 (8자 이상, 문자, 숫자, 특수문자 포함여부 체크) 
 $("#pwd").keyup(function(){
@@ -113,7 +88,33 @@ function checkPassword(pwd){
     }
     
     return true;
-}     
+}
+
+ // 비밀번호 재확인 스크립트
+    $(function(){
+        $("#alert-success").hide();
+        $("#alert-danger").hide();
+        $("#pwd-danger").hide();
+        $("#pwdCheck").blur(function(){
+	console.log("1");
+            var pwd=$("#pwd").val();
+            var pwdCheck=$("#pwdCheck").val();
+            if(pwd != "" || pwdCheck != ""){
+                if(pwd == pwdCheck){
+                	console.log("2");
+                    $("#alert-success").show();
+                    $("#alert-danger").hide();
+                    $("#submit").removeAttr("disabled");
+                }else{
+                	console.log("3");
+                    $("#alert-success").hide();
+                    $("#alert-danger").show();
+                    $("#submit").attr("disabled", "disabled");
+                }    
+            }
+        });
+    });
+     
    
 // 이용약관부분관련 2개 시작~
 let check1=false;

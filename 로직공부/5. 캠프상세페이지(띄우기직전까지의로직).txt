@@ -45,7 +45,7 @@ String secConv = camp.getSec_conv();
 String etxConv = camp.getEtc_conv();
 
 위구문을통하여 알 수 있는 사실중 하나는 우린 lombok을 사용하기때문에 
-Camp.java에서 get,set이 @AllArgsConstructor에의해 정의되어 있어서
+Camp.java에서 get,set이 @Data에의해 정의되어 있어서
 get set을 사용할수있다.
 
 conv / secconv / etxconv 에 각각 값이 담겨있으면 값 간에 , 를 찍어주고 그값들을 다시 allConvlist에 추가한다.
@@ -83,7 +83,7 @@ ModelAndView객체를 생성하며 페이지이동 맵핑에 해당 캠프이름
 	</select>
 
 해당 SQL문을 통하여 SORT 테이블에서 가져온 camp_idx와 일치하는 sort_name을 모두 String타입으로가져갑니다.
-(그룹바이 sort_name을 하였기때문에 중복된 값이 걸러지고 ex) 오토캠핑, 카라반 이처럼 하나씩의 sortname이
+(group by sort_name을 하였기때문에 중복된 값이 걸러지고 ex) 오토캠핑, 카라반 이처럼 하나씩의 sortname이
 가져가집니다.)
 
 8. CampDetailServiceImpl.java
@@ -135,32 +135,28 @@ camp / allConvList / sortNameList / ImgDetailList / list
 1. CampDetailController.java의 진행중이던 campDetail메서드의 
 mv = cdService.campDetail(Integer.parseInt(camp_idx)); 가 끝난것임
 ----------------------------------------------------------------------------------------------------------------
-11. CampDetailController.java 컨트롤러 -(2) 리뷰로직은 간단하게만 설명.
-( 1.안의 (1)번째 관련이 1~10번인데 그처럼 비슷하게 로직을따라이해할것)
+11. CampDetailController.java 컨트롤러(리뷰부분)
 
-(2) mv = cdService.selectReviewS(Integer.parseInt(camp_idx), false, session, mv, nextPage);
-부분으로 인하여 
-CampDetailServiceImpl.java의 public ModelAndView selectReviewS메서드가 실행된다.
+mv = cdService.selectReviewS(Integer.parseInt(camp_idx), false, session, mv, nextPage);
+부분으로 인하여 CampDetailServiceImpl.java의 public ModelAndView selectReviewS메서드가 실행된다.
 
-그안의 로직들을 따라가며 SQL문들을 모두 해보면 해당메서드에서는 캠핑장에대한
+로직 순서대로 페이징처리 해주고 별점 설정해주고 int pageSize = pageUtil.getPageSize("5", session); 현재페이지
+5개만 보여주도록 설정해줌. 
+
+int reviewListCount = rmapper.selectCountReview(camp_idx);으로 인해 camp_idx 해당 캠핑장의 리뷰 갯수를 구해
+if 문으로 분기를 해서 리뷰가 없으면 null, 있을때는 별점 로직이 돌아 리뷰테이블을 생성해줌.
+
+정리하자면 로직들을 따라가며 SQL문들을 모두 해보면 해당메서드에서는 캠핑장에대한
 리뷰개수 / 캠핑장리뷰띄우기 / 리뷰에대한 별점점수 / 별점으로 별모양 채우기 / 리뷰별점 평균들을 모두 구하여
-reviewVO객체에 넣고 그것과 page수를 5로
- 지정한 2가지 reviewVO와 page를 mv에 추가하여 반환. -> CampDetailController.java
+reviewVO객체에 넣고 그것과 보여지는 리뷰 수를 5로 지정한 2가지 reviewVO와 page를
+mv에 추가하여 반환. 여기서 reviewList가 null이면 mv = new ModelAndView(); 이런식으로
+mv 초기화 후에 반환(아무 값이 없겟쥬?) -> CampDetailController.java
 
 12. CampDetailController.java 컨트롤러
-(1) 과 (2) 를 통해 mv에 왠만한 값들을 다 품게 하였고
+위 로직을 통해 mv에 왠만한 값들을 다 품게 하였고
 추가로 체크인 날짜 체크아웃날짜 인원수까지 설정하고 mv를 최종적으로 camp_detail.bam으로 반환한다.
-
-
-
-
-
-
-
-
-
-
-
-
+return mv;를 통해 mv = cdService.campDetail(Integer.parseInt(camp_idx)); 에서 얻어온 CampDetailServiceImpl.java에서 
+ModelAndView mv = new ModelAndView("client/camp/camp_detail/"+WebTitle.TITLE+campName); 이런식으로 mv에 저장된
+타일즈 뷰 값을 쏴주면 이제 camp_detail.jsp 뷰단으로 이동하게됨
 
 

@@ -1,0 +1,179 @@
+##예약페이지(결제하기버튼)## -> ##이니시스결제창## -> ##예약완료페이지## 
+
+
+(1)booking.jsp
+onclick="requestPay()"를 통해 결제하기 버튼이 눌러지면 이제 스크립트구문 찾아가야겠쥬?
+
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+(2)payment.js
+function requestPay(){ 
+
+일단 시작 구문에서 if문 2개를 통해 예약자 성함과 휴대폰번호가 입력되어있지않으면
+각각의 구문을 alert으로 띄워서 입력을 받게끔 유도합니다.
+
+var IMP = window.IMP; 
+IMP.init("imp72876855");
+해당 구문에 발급받은 가맹점 식별코드를 통해 연결하고
+
+// IMP.request_pay(param, callback) 결제창 호출구문
+
+::IMP.request_pay({ 		--> 여기가 param
+	괄호안에는 결제 관련 정보들(param값들)을 세팅하여 준다.
+
+	::function (rsp) {		-->여기가 callback
+		if (rsp.success) {
+
+@@여기서 잘 이해합시다~!!@@
+일단 payment.js의 시작 부분을 보면 
+	$(document).ready(function(){ 예약페이지가 준비될때
+제이쿼리를 이용하여 name이 buyerInformation인 form태그의 input박스(booking.jsp뷰)에 
+일부 값들을 넣어주는 것을 볼 수 있고
+나머지 미처 넣지 못한 값들은 IMP.request_pay안의 결제창 호출이 
+성공적으로 이루어졌을때 나머지 값들을 넣어주고 
+
+:: buyer_information.submit(); 서밋하여 booking.jsp 안에 있는(아래 적은)
+폼 태그의 액션값에 의해 맵핑을 찾아 갑니다.
+ 
+
+<form name="buyerInformation" method="post" action="./payment.bam">
+
+<input id="imp_uid" name="imp_uid" type="hidden" value="0"> //결제번호
+<input id="camp_idx" name="camp_idx" type="hidden" value="0">
+<input id="sort_idx" name="sort_idx" type="hidden" value="0">
+<input id="buyer_email" name="email" type="hidden" value="${member.email}">
+<input id="amount" name="total_fee" type="hidden" value="0">
+<input id="udate" name="udate" type="hidden" value="0">
+<input id="buyer_tel" name="tel" type="hidden" value="0">
+<input id="memo" name="memo" type="hidden" value="요청사항이 없습니다.">
+<input id="people_num" name="p_num" type="hidden" value="0">
+<input id="buyer_name" name="name" type="hidden" value="${member.name}">
+<input id="service_fee" name="service_fee" type="hidden" value="0">
+<input id="my_points" name="my_point" type="hidden" value="0">
+
+<input id="pay_fee" name="pay_fee" type="hidden" value="0">
+<input id="use_points" name="use_point" type="hidden" value="0">
+<!--포인트 사용 후 남은 포인트 값-->
+<input id="remaining_point" name="remaining_point" type="hidden" value="0">
+</form>
+
+-------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
+(3) BookingController.java
+
+@PostMapping("payment.bam")
+	private ModelAndView getPayImformation( 
+해당메서드안의
+
+service.insertBookingAndUpdatePoint(booking, udate, remaining_point, session);
+에 의하여 서비스로 이동~
+
+매개변수들 중 booking은 Booking.java를 참고해서 그 형태로 넘겨받은 폼의 컬럼값을 받는것
+udate는 폼으로 직접받아왔으며 sessionItem.checkDate를 통해 저장했던 체크인아웃날짜
+remaining_point는 폼을 통해 받아온 포인트 사용 후 남은 포인트 값
+
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+(4) BookingServiceImple.java 로 이동
+
+public void insertBookingAndUpdatePoint( 안의 구문들을 차근 차근 실행
+
+ udate 날짜를 - 로 나누어 체크인 아웃 날짜를 각각 
+나누어 booking모델의 컬럼 값
+private Date check_in;
+private Date check_out;
+에 넣어주고
+-----------------------
+long save_point = getSavePoint(email,booking.getTotal_fee());
+구문의 getSavePoint 함수를 찾아서 드가보면 그안에
+매퍼 파일을 찾아가는 
+String grade = mapper.selectMemberGrade(email);
+구문이 있는데
+
+(4)-(1)BookingMapper.xml
+ **BookingMapper.xml의
+<!-- 회원 등급별 포인트 지급을 위한 회원의 상태 알아보는 select -->
+	<select id="selectMemberGrade" parameterType="String" resultType="String">
+		select GRADE from MEMBER where EMAIL=#{email}
+	</select>
+을 통해 예약하는 이메일값에 해당하는 회원의 등급을 꺼내와서
+String grade에 담고 switch 구문을 통해
+등급별 토탈 요금에 대한 포인트를 만들어 반환하여
+long save_point에 담습니다.
+-------------------------------
+그 포인트를 booking의 컬럼값에 담고
+long point변수에는 save포인트와 remaining 포인트 즉,사용후 남은 포인트를 더한값을 담습니다.
+----------------------------------------------------
+(4)-(2)BookingMapper.xml
+그러고 나서 if문안의 mapper.insertBooking(booking)을 통하여 매퍼 파일을 찾아갑니다.
+<insert id="insertBooking" parameterType="Booking">
+insert into BOOKING values(#{imp_uid},#{email},#{camp_idx},#{sort_idx},1,#{total_fee},SYSDATE(),
+#{check_in},#{check_out},#{tel},#{memo},#{p_num},'F',#{name},#{service_fee},'F',#{pay_fee},#{use_point},#{save_point})
+</insert>
+
+BOOKING(예약)테이블에 파라미터타입으로 Booking형태로 받음(Booking클래스가 가지고 있는 모든컬럼값을 인서트함)
+결제번호 / 이메일 / 캠프번호 / 구역번호 / 캠핑장넘버 / 1(결제완료를뜻함) / 전체요금 / 결제날짜 / 체크인 / 체크아웃날짜 
+/ 핸드폰번호 / 메모 / 이용인원(내가등록) / F(리뷰상태) / 예약자이름 / 서비스요금 / F(이용상태) / 결제요금 / 사용포인트 / 저장된포인트
+를 넣어줍니다~
+
+그러고나서 다시 BookingServiceImpl.java로 돌아와서 DB에 값이 잘들어갔으면 true값을 가지고 왔으므로
+if 문 안으로 들어가게 되고 if 문안의 
+mapper.plusTotalBooking(booking.getCamp_idx()); 구문을 다시 만납니다.
+---------------------------------------------------------------
+(4)-(3)BookingMapper.xml
+<update id="plusTotalBooking" parameterType="int">
+update CAMP set TOTAL_BOOKING = ((select ifnull(TOTAL_BOOKING, 0) from CAMP where CAMP_IDX = #{camp_idx})+1) where CAMP_IDX = #{camp_idx}
+</update>
+
+예약한 캠핑장의 전체예약갯수(TOTAL_BOOKING컬럼임)를 +1해주는 구문입니다.
+----------------------------------------------------------------------------
+그러고나서 다시 BookingServiceImpl.java로 돌아와서 다음 if 문을 실행~
+
+savepoint와 사용후남은포인트를 합친 point의 값이 - 1L 음수 값이 아니면 if문이 실행됩니다.
+그안의 mapper.updatePoint(query); 에 의해 매퍼 파일로 이동
+------------------------------------------
+(4)-(4)BookingMapper.xml
+
+<!-- 포인트 사용 시 포인트 업데이트 -->
+	<update id="updatePoint" parameterType="hashmap">
+		update MEMBER set POINT = #{point} where EMAIL = #{email}
+	</update>
+SQL문을 통해 DB 회원테이블의 point를 업데이트해줍니다. 업데이트가 잘되었다면 true값을 가지고 돌아가게됩니다.
+다시 BookingServiceImpl.java로 돌아와서
+
+flag 에 true가 들어가게 되고 true라면 그다음 if문이 실행됩니다.
+if(flag){
+	Member member  = (Member)session.getAttribute("member");
+	member.setPoint(point);
+	session.setAttribute("member", member);
+
+세션에서 회원정보를 가져와서 세션의 회원 포인트도
+세팅해줍니다~~~~~~~~ 
+아직 끝이 아니쥬? 지금 서비스니까 컨트롤러 단으로 드디어 다시 돌아갑니다~~
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+(5) BookingController.java
+
+돌아와서 
+ModelAndView mv = new ModelAndView("client/booking/booking_confirm/"+WebTitle.TITLE+"결제완료");
+		mv.addObject("booking",booking);
+		mv.addObject("my_point",my_point);
+		mv.addObject("remaining_point",remaining_point);
+return mv;
+저장소 reutrn mv에  결제완료 페이지로 이동~~~
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+(6) booking_confirm.jsp 
+
+즉 결제 완료페이지가 뜨면서 예약완료 끝~~~~~~~~~~~
+
+
+
+
+
+
+
+
+

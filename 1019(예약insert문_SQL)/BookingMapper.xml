@@ -36,12 +36,9 @@
 		update BOOKING set review_state = 'T' where imp_uid = #{imp_uid}
 	</update>
 
-	<!-- 캠핑장 결제 완료 시 예약 insert 22.10.19수정-->
-	<!-- <insert id="insertBooking" parameterType="Booking">
-		insert into BOOKING values(#{imp_uid},#{email},#{camp_idx},#{sort_idx},1,#{total_fee},SYSDATE(),#{check_in},#{check_out},#{tel},#{memo},#{p_num},'F',#{name},#{service_fee},'F',#{pay_fee},#{use_point},#{save_point})
-	</insert> -->
+	<!-- 캠핑장 결제 완료 시 예약 insert -->
 	<insert id="insertBooking" parameterType="Booking">
-		insert into BOOKING values(#{imp_uid},#{email},#{camp_idx},#{sort_idx},1,#{total_fee},SYSDATE(),#{check_in},#{check_out},#{tel},#{memo},#{p_num},'F',#{name},#{service_fee},'F')
+		insert into BOOKING values(#{imp_uid},#{email},#{camp_idx},#{sort_idx},1,#{total_fee},SYSDATE(),#{check_in},#{check_out},#{tel},#{memo},#{p_num},'F',#{name},#{service_fee},'F',#{pay_fee},#{use_point},#{save_point})
 	</insert>
 	
 	<!-- 포인트 사용 시 포인트 업데이트 -->

@@ -93,11 +93,11 @@ public class MemberServiceImpl implements MemberService {
 		//Naver smtp 사용
 		String charSet = "utf-8";
 		String hostSMTP = "smtp.naver.com";
-		String hostSMTPid = "xkzkfhxm@naver.com";
-		String hostSMTPpwd = "dlwjdgus";
+		String hostSMTPid = "";
+		String hostSMTPpwd = "";
 
 		// 보내는 사람의 Email, 제목, 내용
-		String fromEmail = "xkzkfhxm@naver.com";
+		String fromEmail = "";
 		String fromName = "불밤야밤 :: 최고의 캠핑장";
 		String subject = "";
 		String msg = "";

@@ -1,0 +1,333 @@
+#캠핑장 호스팅 클릭시-> 캠핑장 호스팅 페이지 열리는 순간까지#
+
+(1) client_footer.jsp
+ :: <li><a href="/owner/add_camp.bam">캠핑장 호스팅</a></li>
+ - 링크 타고 이동~
+
+(2) OwnerController.java
+ :: @RequestMapping(value = "add_camp.bam", method = RequestMethod.GET)
+	private ModelAndView addListing() {
+ 맵핑된 곳 메서드의 
+ :: ModelAndView response = ownerService.checkOwner(session); 에 의해 서비스로 이동~
+
+(3) OwnerServiceImpl.java
+ :: @Override
+	public ModelAndView checkOwner(HttpSession session) {
+ #메서드 구문 안을 해석 해보겠습니다.
+ - 세션의 회원 정보를 가져와 Member user 변수에 넣어주고
+ - 첫번째 if 문에서는 user 정보가 널값이면 즉, 세션에 로그인된 회원 정보가 없으면
+   로그인 페이지로 리다이렉트 시킴
+ - user가 null값이 아니면 즉, 회원정보가 세션에 있으면 else문 실행
+ ::  else {
+	owner = ownerMapper.select_owner(user.getEmail());
+유저의 이메일값을 가지고 매퍼파일 찾아 이동~~
+
+(4) OwnerMapper.xml
+ :: <select id="select_owner" resultType="Owner" parameterType="String">
+		select * from OWNER where email = #{email}
+	</select>
+SQL 실행하여 사업자 테이블에 가져온 유저(멤버)의 email과 동일한 사업자 회원이 있는지
+모든컬럼조회 하고 있다면 Owner형으로 반환합니다.
+다시 서비스로 돌아감~~
+
+(5) OwnerServiceImpl.java
+반환된 값을 Owner 클래스 owner변수에 담아줍니다. 
+그 이후에 if 구문이 실행되게 됩니다.
+ - 첫 if문은 가져온 owner가 널 값이 아니고!!!! A_no가 1 즉, 일반회원이면 로그인 페이지로 리다이렉트
+( 즉, 관리자가 승인을 하여서 사업자테이블에는 반영되었으나, 회원테이블에서 A_NO가 아직 일반회원으로 되어있을때)
+
+ - 두번째 else if 문은 user회원의 A_no가 1 즉, 일반회원일 경우에 add_camp로 이동할 뷰네임을 지정해주면서 result키
+에 1을 담고 이동합니다.
+
+ - 그다음 else if 문은 user회원의 A_no가 2 즉, 사업자일경우로 이동할 add_camp뷰 페이지를 가지고
+ 이중 if else 문에 따라 owner사업자 테이블의 캠핑장번호가 0 즉, 없으면 result에 2를 가지고 이동
+  else문 owner사업자 테이블의 캠핑장 번호가 0이 아닌 다름 값, 있으면 result에 3을 가지고 이동합니다.
+
+일단 컨트롤러로 이동~~~~~~~~~~~~~~
+
+(6) OwnerController.java
+	
+ :: ModelAndView response = ownerService.checkOwner(session);
+	return response;
+서비스에서 넘어온 response를 저장소 response에 담고 반환합니다.
+
+(7) add_camp.jsp
+
+뷰가 준비됨가 동시에 스크립트의 
+ :: $(document).ready(function() { 제이쿼리가 실행됩니다.
+저장소 response의 result키의 값 에따라 if else if 구문들이 실행됩니다.
+ -> 첫번째 if 문 result값이 1이면 일반회원이기에 사업자 회원만 접근 가능하다고 띄워줍니다.
+ -> 두번째 else if 구문에서는 result값이 3 즉, 사업자 테이블의 캠핑장번호가 있기때문에 
+  이미 등록된 캠핑장이 존재합니다 를 띄워줍니다.
+
+ -> result값이 2일경우에는 페이지가 켜진다고 보면 될 것입니다.
+-----------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+#캠핑장 등록(호스팅) 페이지#_(열림)
+
+(1) add_camp.jsp
+
+ @캠핑장등록 부분
+ :: 주소검색+지도 API는 업체문의 페이지에 사용한 로직과 완전히 동일합니다.
+(onclick="sample5_execDaumPostcode()" 클릭이벤트와 그를 통한 스크립트문)
+
+@상세정보 등록 부분
+ ::대표사진(썸네일)을 등록하는 부분의 경우에는
+<input type="file" accept="파일 확장자|audio/*|video/*|image/*|미디어 타입">
+ input 박스의 type이 file인것을 볼 수 있고, 업로드 할수있는 파일의 타입을
+명시할 수 있는 속성인 accept가 사용되는 것을 볼 수 있다.
+
+ ::상세사진의 경우에는 여러개의 사진을 한번에 업로드가능한데
+하나의 파일이 아닌 다중 파일일 경우에는 input태그의 속성중 multiple="multiple"
+을 이용하여 사용자가 둘이상의 값을 입력할수있음을 명시합니다.
+
+ ::사이트추가에서 종류(오토/글램핑/카라반/노지/기타)부분에는
+onClick="chooseOnlyOneSort(this, 0) 이벤트가 걸려있음
+ ->add-camp.js에 이동
+ function chooseOnlyOneSort(check, index){ 이벤트에 의해 해당함수 실행~
+ - 해당스크립트함수를 요약해서 말하자면 체크한 곳의 사이트 종류를 add_camp.jsp의
+ type이 히든값인 input박스에 value값으로 넣어주는 구문입니다.
+<input id="checked-data-0" type="hidden" class="check" name="sort[0].sort_name"  value="">
+
+ :: 사이트 추가/제거 
+onclick="add_inputs()
+onclick="remove_inputs()
+각각의 클릭 이벤트 발생
+-> add-camp.js에 이동
+function add_inputs(){ 함수 -> function more_input_html(index){ 함수구문으로 사이트폼 추가
+function remove_inputs(){함수 -> .removeChild(e) 메서드로 사이트폼 제거
+
+ :: 바베큐 이용 가능 유/무
+onClick="checkOnly(this)
+클릭이벤트 발생
+jsp파일 자체의 스크립트문 안의 
+function checkOnly(chk){ 함수
+ 해석하자면 1개만 선택할수 있도록 하고
+무를 선택하면 disabled속성 true줘서 금액 입력못하게 하고
+유를 선택하면 disabled속성 삭제해서 금액 입력할수 있게함
+-----------------------------------------------------------------------------------------------------------------------
+ :: 캠핑장 업로드 버튼클릭후 일단 자바스크립트
+onclick="uploadCamp();"
+클릭이벤트 발생
+-> add-camp.js에 이동
+function uploadCamp(){ 함수
+1번째 for문 돌면서 file속성에 .png와 .jpg 로 지정된 파일 업로드했는지 확인하고 구문alert으로 띄움
+
+2번째 for문 돌면서 입력하지않은 곳이 있으면 .focus로 그 빈칸으로 이동시키고
+alert으로 모든정보를 입력해주세요 띄움
+
+3번째 if문에서 서비스정책동의 체크하지않았을시 
+서비스 정책에 동의해달라는 구문을 띄움
+
+4번째 편의시설/안전시설/기타부대시설
+let conv = "";
+let sec_conv = "";
+let etc_conv = "";
+각각 변수에 ,찍어주면서 나열해서 저장
+
+5번째 bbq-price가 널값이면 금액 0원으로 설정
+
+6번째 let params = { 에 json(?)배열(?)형태로
+캠핑장이름/주소/전화번호/사이트수/1일최대인원수/주차장대수/편의/안전/기타시설/관리자이름/
+관리자번호/바베큐 이용 요금등을 담음.
+
+7번째 상세정보(id=submit-form)에 해당하는 것들은
+let form = document.getElementById("submit-form"); -> let form에 담음
+
+8번째 params에 담았던 값들은 히든 타입input박스를 생성해주면서 form생성
+for(let key in params){
+		let hiddenField = document.createElement("input");
+		hiddenField.setAttribute("type", "hidden");
+		hiddenField.setAttribute("name", key);
+		hiddenField.setAttribute("value", params[key]);
+		form.appendChild(hiddenField);
+
+9번째 해당사이트 이용 금액 camp-price을 가져와서
+숫자형으로 고쳐주고 담아줌..........
+
+이과정 다 거치고 나면 form.submit(); 을 통해
+add_camp.jsp 의 form태그 action="upload_camp.bam" 값이 가르키는 
+맵핑 장소로 이동~~~ 이제부터 백시작~~
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+#캠핑장 등록(호스팅) 페이지#_캠핑장 업로드 버튼클릭후
+*add-camp.js의  form.submit();
+-> *add_camp.jsp 의 form태그 action="upload_camp.bam" method="post"
+
+(1) OwnerController.java
+@PostMapping("upload_camp.bam")
+	private ModelAndView addCamp(CampAndSortAndImg model) { 함수 실행
+
+CampAndSortAndImg.java의 형태 참조
+private List<Sort> sort; -> add_camp.jsp의 form에 담긴 것들 중 name값이 sort[0].sort_name와 같은것들
+private Camp camp; -> add_camp.jsp->add_camp.js의 let params에 담긴것들
+private MultipartFile imgThumb; -> add_camp.jsp의 form에 담긴 것들 중 name="imgThumb"인 대표사진
+private List<MultipartFile> imgDetail; -> add_camp.jsp의 form에서 name="imgDetail"인 상세사진
+
+1번째 for문은 model에서 사이트인 sort를 얻어와서(여러개일수있어 list형태임) 하나씩 Sort형 detail에 넣어주고
+count++ 갯수만큼 카운팅해준다.
+2번째 for문은 model에서 상세사진인 ImgDetail을 가져와서(여러개사진일수있어list형태)하나씩 MultipartFile형 file에
+넣어준다.
+
+3번째로 ModelAndView response = ownerService.addCampService(model, session);구문을 만나서 서비스를 찾아간다.
+
+(2) OwnerServiceImpl.java
+
+@Override
+public ModelAndView addCampService(CampAndSortAndImg model, HttpSession session) { 서비스구문해석시작
+
+if(ownerMapper.insertCamp(model.getCamp())) {
+바로 첫if문을 만나서 모델의 Camp정보를 가지고 매퍼 파일로 이동~
+
+(3) CampMapper.xml
+ <!-- 캠핑장 등록 -->
+   <insert id="insertCamp" parameterType="Camp">
+      insert into CAMP values(nextval(CAMP_SEQ), #{camp_name}, #{address}, #{camp_tel}, #{site_num}, #{full_num}, #{parking}, #{conv}, #{sec_conv}, #{etc_conv}, #{agency_tel}, #{agency_name}, #{intro})
+   </insert>
+SQL문을 통해 캠핑장을 등록합니다. 잘 실행되었으면 true값을 가지고 나간다.~다시 서비스로 돌아가기
+
+(4) OwnerServiceImpl.java
+
+SQL이 잘실행되어 true값이 반환되었다면 if 문 안으로 들어오게됩니다.
+query.put("camp", model.getCamp());
+query.put("email", user.getEmail());
+키 값형태로 camp형 모든값와 email값을 쿼리에 추가하고 그다음 if문 시작
+
+if(ownerMapper.updateOwnerCampIdx(query)) { 두번째 if문에 위의 쿼리값들을 가지고 매퍼파일로 이동~
+
+(5) OwnerMapper.xml
+
+<update id="updateOwnerCampIdx" parameterType="hashmap">
+	update OWNER set CAMP_IDX = #{camp.camp_idx} where EMAIL = #{email}
+</update>
+해당 sql문을 통하여 회원인user의 email과 일치하는 Owner사업자의 campidx값을 업데이트해줍니다.
+이 역시 잘 실행되었으면 true값을 가지고 나간다~다시 서비스로 돌아가기
+
+(6) OwnerServiceImpl.java
+
+SQL이 잘 실행되어 true값이 반환되었다면 if문 안으로 들어오게 됩니다.
+
+이미지 배열을 일단 하나 변수 선언해주고
+String savedName = fileUtil.uploadFile(model.getImgThumb(), Path.CAMP_IMG_THUMB, session);
+구문 실행을 위하여 이동(매개변수로 대표사진, 대표사진 프로젝트내경로(Path.java에 세팅)를 가지고 갑니다.
+
+(7) FileUtil.java
+의 
+ :: public String uploadFile(MultipartFile file, String path, HttpSession session) { 메서드 실행
+그안의 구문들을 우선적으로 해석하면 내가 올린 orginal파일이름이 ->ofname이 되고
+ofname에 _와 long ms = System.currentTimeMillis(); (뜻 : 현재시각을 밀리세컨드 단위로 반환한다.)
+로 통해 난수를 뒤에 붙여주어 saveFileName에 저장한다.
+(그게 나중에 FNAME이 되는듯)
+즉, 예시로 첫번째파일 (OFNAME)-> 첫번째파일_319942 (saveFileName) 이런식
+그 이후에 boolean flag = writeFile(file, saveFileName, path); 구문에 따라
+
+ :: private boolean writeFile(MultipartFile file, String saveFileName, String path) { 메서드 실행
+
+가져온 pate 경로를 통해 File dir에 넣어주고
+경로가 존재하지 않으면 dir.mkdirs();을 통해 파일디렉토리를 생성해주고 나서 진행
+
+바이트 단위의 출력을 다뤄주는 
+FileOutputStream : 파일의 내용을 작성함
+FileOutputStream fos 변수를 선언해주고 null값을 일단 넣은뒤에
+try 구문이 시작된다. 받아온 file의 byte를 얻어내어 data[]배열에 넣어주고
+
+//내보낼 경로와 이름을 지정
+fos = new FileOutputStream(path+saveFileName);
+
+fos.write(data); -> data에 담긴 내용을 입력하고
+fos.flush();  -> 버퍼의 내용을 비우는 역할을 한다. 그이후 true값을 반환
+fos.close(); -> FileOutputstream을 닫아준다.
+
+다시 맨위의 메서드로 돌아가서  boolean flag에는 에러없이 실행되었을때 true값이 담긴다.
+
+메서드 마지막 부분에서 return 값으로 saveFileName을 가지고 반환된다. 서비스로 다시 이동~
+
+(8) OwnerServiceImpl.java
+
+(6)번에서 실행하던 구문으로 돌아와서 String savedName = 에는 가져온 saveFileName이 담기게 된다.
+imgList.add(new Img(0, 0, savedName, model.getImgThumb().getOriginalFilename(), model.getImgThumb().getSize(), "thumb"));
+이미지 리스트에 괄호안 해당값들을 가진 Img를 넣어준다. 
+
+바로 아래 for문을 돌면서
+for(MultipartFile file : model.getImgDetail()) { 이번엔 상세이미지들을 위에서 대표사진할때 했던 로직처럼
+fileUtil.uploadFile( 즉, FileUtil.java의 메서드들을 돌고 돌아와서 imgList.add( 이미지 리스트에 추가해줍니다.
+
+query.put("list", imgList);  모든 이미지리스트를 담고있는 imgList를 쿼리에 넣고 아래 if 문에 들어가게 됩니다.
+
+if(ownerMapper.insertImgs(query)) { 구문에 의해서 매퍼 파일을 일단 찾아갑니다.
+
+(9) OwnerMapper.xml
+
+<insert id="insertImgs" parameterType="hashmap">
+		<selectKey keyProperty="img_idx" resultType="int" order="BEFORE">
+			select ifnull(max(IMG_IDX), 0)+1 from IMG
+		</selectKey>
+		INSERT into IMG values
+		<foreach collection="list" item="img" index="index" separator=",">
+			(nextval(IMG_SEQ),#{camp.camp_idx},#{img.fname},#{img.ofname},#{img.fsize},#{img.division})
+		</foreach>
+	</insert>
+
+SQL문을 해석하자면 일단은 slectKey구문 무시하고 했을 때
+이미지 테이블에 가져온 imgList들을 foreach태그로 반복 돌면서 DB에 insert해줍니다.(캠핑장의 대표사진과 상세사진들)
+
+SQL실행후 다시 서비스로 돌아갑니다.
+
+(10) OwnerServiceImpl.java
+서비스로 돌아와서 SQL문을 통해 캠핑장 대표사진과 상세사진들이 잘 들어갔으면 true값에 의해 if문 안의 구문이 실행됩니다.
+
+if문 안으로 들어오게 되면 이번에는 for문을 돌면서 for(Sort new_sort : request.getSort()) {
+아까전 로직처럼 fileUtil의 uploadFile메서드를 돌고(파일을 경로에 업로드하고) 나와서
+query.put("list", request.getSort()); 쿼리에 사이트(여러개일수있음) 사진들을 리스트 형태로 넣어주고
+
+if(ownerMapper.insertSorts(query)) { 해당 if 문을 만나서 매퍼 파일로 이동~
+
+(11) OwnerMapper.xml
+
+<insert id="insertSorts" parameterType="hashmap">
+		<selectKey keyProperty="sort_idx" resultType="int" order="BEFORE">
+			select ifnull(max(SORT_IDX), 0)+1 from SORT
+		</selectKey>
+		INSERT INTO SORT values
+		<foreach collection="list" item="sort" index="index" separator=",">
+			(nextval(SORT_SEQ),#{camp.camp_idx},#{sort.sort_name},#{sort.site_name},#{sort.people_num},#{sort.site_fee},#{sort.fname},#{sort.ofname})
+		</foreach>
+	</insert>
+SQL문을 해석하자면 이번엔 hashmap형태로 들어온 Sort값들(list형태)을 SORT테이블에 모두 INSERT해줍니다.
+그러고나서 다시 서비스로 돌아갑니다.
+
+(12) OwnerServiceImpl.java
+SQL문이 잘 실행되어 사이트 테이블에 추가 되었다면 if문 안으로 들어오게 되고 if문 안에서
+response.addObject("result", true);
+return response;
+
+저장소 response 속성으로 resul는 true를 가지고 반환됩니다.
+반환값을 가지고 컨트롤러로 이동~
+
+(13) OwnerController.java
+
+의 (1)에서 로직타고 들어갔다가 이제 컨트롤러단으로 돌아왔기에 로직을 탔었던 
+ModelAndView response = ownerService.addCampService(model, session);
+		return response; 구문으로 돌아와서 반환값으로 가져온 response를 다시 변수에 저장해주고
+그 response를 반환해줍니다. 반환해주는 곳은 호출했던 뷰로 다시 가게 되는 것이고 일단 뷰로 이동해보겠습니다.
+
+(14) add_camp.jsp
+뷰 안의 스크립트 문중에서 
+$(document).ready(function() { 페이지가 준비될때 실행되는 제이쿼리를 살펴보면 
+
+}else if(<%=request.getAttribute("response")%> == true){
+			alert("캠핑장 등록 완료");
+			location.href = "/";
+}else if(<%=request.getAttribute("response")%> == false){
+			alert("error");
+	}
+})
+
+이렇게 else if 구문에서 request의 getAttribute메서드를 통하여 반환받은 response안의 result안의 true false여부에따라
+
+캠핑장등록 완료 구문과 에러 구문이 alert을 통해 나타나지는 것을 볼 수 있습니다 
+-------------------------------------------------------------------------------------------------------------------------------
+시펄~ 진짜 뒤지게 길었네.
+
+
+

@@ -1,0 +1,193 @@
+1.
+admin_side_menu.jsp > 
+<a href="sales_bam_monthly.bam"><span>사이트 월별 매출</span> </a>
+
+2.
+SalesManageController.java >
+@RequestMapping("sales_bam_monthly.bam")
+	private String salesChartMWC() {
+		if(session.getAttribute("admin") == null) {
+			return "redirect:login.bam";
+		}
+		return "admin/sales/chart_monthly_bam/"+WebTitle.TITLE+"매출 통계";
+	}
+
+=============================window.onload = function()================================================
+3.	
+chart_monthly_bam.jsp >
+window.onload = function()
+
+
+const opt = document.querySelectorAll("#year option");
+선택된 요소의 최상단 요소만 로직에 포함시킨다
+(<select id="year"> <option value> 부분)
+
+
+for(let i=0;i<opt.length;i++)
+년도를 선택하면 해당 index에 'selected'가 저장되고 break 하여 반복문을 탈출한다
+(opt[i] 선택할 년도)
+
+
+const xhttp = new XMLHttpRequest();
+서버에서 값을 가져오기 위한 객체 생성
+
+xhttp.onreadystatechange = loader
+readystate가 변하면 loader함수가 발동한다
+function loader() 는 서버에서 값을 성공적으로 받으면, 각 요소에 값이 저장되고 이를 html로 출력하게끔 한다
+
+xhttp.open('GET', './sales_data_bam_m.bam?year='+year, true);
+사용자가 선택한 year을 매개변수로한다
+
+3-1.
+SalesManageController.java > 
+@Autowired
+SalesService service;
+@ResponseBody
+	@RequestMapping(value="sales_data_bam_m.bam", method=RequestMethod.GET, produces="application/json")
+	private List<?> salesDataAllM(String year) {
+		return service.selectMonthlyAllService(year);
+	}
+
+SalesService.java > 
+SalesServiceImpl.java >
+@Override
+	public List<Revenue> selectMonthlyAllService(String year) {
+		List<Revenue> list = mapper.selectMonthlyAll(year);
+		return list;
+	}
+	
+SalesMapper.java > 
+SalesMapper.xml > 
+<select id="selectMonthlyAll" resultType="Revenue" parameterType="String">
+SELECT 
+			SUM(total_fee) as total_sale, SUM(service_fee) as earning, 
+		    SUM(total_fee) - SUM(service_fee) as profit,
+		    ROUND(((SUM(service_fee) / SUM(total_fee) )*100), 2) as ROS,
+		    COUNT(*) as count_sale, 
+			date_format(bdate, '%Y-%m') as month
+		FROM 
+			BOOKING
+		WHERE
+		    date_format(bdate, '%Y')=#{year} and S_NO=1
+		GROUP BY 
+			date_format(bdate, '%Y-%m')
+		ORDER BY 
+			date_format(bdate, '%Y-%m') asc
+	</select>
+=>
+최종적으로	
+SalesManageController.java > 
+private List<?> salesDataAllM(String year) 
+구분(일) = day
+총 매출액(원) = total_sale
+거래 수(회) = count_sale
+업체 순 이익(원) = profit
+영업 수수료(원) = earning
+매출 수익률(%) = ROS 
+값들을 다시 xhttp 객체로 보내준다
+
+
+chart_monthly_bam.jsp >
+function loader(), xhttp.send(); 를 통해 뷰에서 띄워준다
+
+=============================window.onload = function()================================================
+
+
+=============================function redrawChart(val)===================================================
+4.
+chart_monthly_bam.jsp > 
+
+onchange="redrawChart(this.value)"
+작성한 JS를 통해 변화가 일어났는지 감지합니다.
+
+function redrawChart(val)
+#camp_idx의 최상단 요소를 로직에 포함시킨다.(load)를 통해서
+
+const xhttp = new XMLHttpRequest();
+서버에서 값을 가져오기 위한 갹체를 생성
+
+xhttp.onreadystatechange = loader;
+readystate가 바뀌면 loader 함수가 실행된다
+(값을 성공적으로 받아오면 각 인덱스에 받아온 값들을 요소에 저장한다)
+
+xhttp.open('GET', './sales_data_bam_m.bam?year='+year, true);
+사용자 가 선택한 시기를 인자값으로 준다
+
+4-1
+SalesManageController >
+SalesService service;
+@ResponseBody
+	@RequestMapping(value="sales_data_bam_m.bam", method=RequestMethod.GET, produces="application/json")
+	private List<?> salesDataAllM(String year) {
+		return service.selectMonthlyAllService(year);
+}
+
+SalesService.java >
+SalesServiceImpl.java >
+public List<Revenue> selectMonthlyAllService(String year) {
+		List<Revenue> list = mapper.selectMonthlyAll(year);
+		return list;
+	}
+	
+SalesMapper.java >
+SalesMapper.xml >
+<select id="selectMonthlyAll" resultType="Revenue" parameterType="String">
+			SELECT 
+			SUM(total_fee) as total_sale, SUM(service_fee) as earning, 
+		    SUM(total_fee) - SUM(service_fee) as profit,
+		    ROUND(((SUM(service_fee) / SUM(total_fee) )*100), 2) as ROS,
+		    COUNT(*) as count_sale, 
+			date_format(bdate, '%Y-%m') as month
+		FROM 
+			BOOKING
+		WHERE
+		    date_format(bdate, '%Y')=#{year} and S_NO=1
+		GROUP BY 
+			date_format(bdate, '%Y-%m')
+		ORDER BY 
+			date_format(bdate, '%Y-%m') asc
+	</select>
+구분(일) = day
+총 매출액(원) = total_sale
+거래 수(회) = count_sale
+업체 순 이익(원) = profit
+영업 수수료(원) = earning
+매출 수익률(%) = ROS 
+값들을 다시 xhttp 객체로 보내준다
+
+SalesMapper.java >
+SalesServiceImpl.java > 
+public List<Revenue> selectMonthlyAllService(String year)
+List<Revenue> 타입의 list 객체에 위 값들을 저장해주고 전달한다
+
+SalesService.java >
+SalesManageController >
+private List<?> salesDataAllM(String year)
+해당 매개변수에 해당하는 시기를 기준으로 <select id="selectMonthlyAll" > 값을 xhttp에 반환해준다
+
+4-2 
+chart_monthly_bam.jsp >
+function loader()와 xhttp.send(); 를 통해서 view창에 띄워준다
+
+=============================function redrawChart(val)===================================================
+
+=============================barChart====================================================================
+5.
+chart_monthly_bam.jsp >
+<canvas id="myChart"></canvas>
+
+let myData
+차트의 x,y 축에 대한 설정
+
+let chart = document.getElementById('myChart');
+myChart요소를 chart에 저장한다
+
+let myCtx = chart.getContext('2d');
+chart를 2D그래픽으로 표현하기 위한 코드 myCtx에 저장한다.
+
+let barChart = new Chart
+여러 옵션들을 받은 객체 Chart를 barChart에 저장한다(차트르르 만드는 형식 중 하나)
+
+
+=============================barChart====================================================================
+

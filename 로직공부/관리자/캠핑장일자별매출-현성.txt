@@ -1,0 +1,87 @@
+캠핑장 일자별 매출
+chart_daily.jsp > 
+
+1.
+admin_side_menu.jsp > 
+<a href="#"><i class="fa fa-fw fa-area-chart"></i><span> 통계 </span> </a>
+<a href="sales_camp_daily.bam"><span>캠핑장 일자별 매출</span></a>
+
+2.
+SalesManageController.java >
+@RequestMapping("sales_camp_daily.bam")
+private String salesChartD()
+admin session이 없다면 return "redirect:login.bam";
+admin session이 있으면 return "admin/sales/chart_daily/"+WebTitle.TITLE+"매출 통계";
+(admin 테이블에서 NAME과 PWD가 있는 NAME이 null인지 아닌지 확인하는 쿼리)
+해당 경로의 view 파일에서 띄워준다
+
+3.
+chart_daily.jsp > 
+window.onload = function()
+1.
+<table id="camp" class="display" style="width:100%">
+$('#camp').DataTable
+ajax "url": "campData.bam"
+
+CompanyManageController.java >
+@ResponseBody
+	@RequestMapping(value="campData.bam", produces = "application/text; charset=UTF-8")
+	private String campData() {
+		return service.get_campList();
+	}
+	
+CompanyService.java > 
+CompanyServiceImpl.java > 
+public String get_campList() 
+List<Camp> campList = campMapper.selectCamp();
+
+campMapper.java > 
+campMapper.xml > 
+<select id="selectCamp" resultType="Camp">
+      select * from CAMP
+</select>
+캠핑장 전체 목록 검색
+
+CompanyService.java > 
+CompanyServiceImpl.java > 
+public String get_campList() 
+List<Camp> campList = campMapper.selectCamp();
+킴핑장 전체 목록 검색
+JsonArray jArray = new JsonArray();
+캠핑장에 대한 key, value 값들을 해당 배열객체에 저장한다.
+obj1.add("data", jArray);
+배열 객체를 상위 object에 저장한다.
+Object 객체에서 파생되어 나온 객체들이란 것과 이들은 암묵적으로Array 객체를 상속한다는 것이다.
+이를 문자열에 저장하여 반해준다
+
+campMapper.xml > 
+campMapper.java > 
+CompanyServiceImpl.java > 
+CompanyService.java > 
+CompanyManageController.java >
+private String campData()
+return service.get_campList();
+캠핑장에 관한 정보를 배열타입으로 저장하고, 이를 JSON 형태로 주기 위해 문자열로 바꿔서 해당 파일에 리턴해줌
+
+chart_daily.jsp >  
+{ data: "", defaultContent: "<button onclick='drawChart(this)'>차트보기</button>"},
+function drawChart(e) 
+차트를 보여주는 함수
+opt[i].value === year, opt2[i].value === monthStr 이면 
+각각의 요소에 저장하고 break 한다
+
+chart_daily.jsp >  
+ $('#camp').DataTable
+ 캠핑장에 대한 여러 정보를 배열형태로 가져와 JSON 형태로 받아오면
+ 이 값들을 onclick='drawChart(this)' 를 통해 opt[1], opt[2] 에 'selected'를 저장하고
+ camp_idx, camp_name, address 를 저장한다.
+ 이후에 loader()를 통해 서버에서 값을 잘 받고 처리했는지를 확인한다.
+ 
+ chart_daily.jsp >  
+ <input type="button" id="submit4chart" onclick="redrawChart()" value="조회하기" style="float:right; margin-right:10px;">
+ function redrawChart()
+ camp_idx, year, month 의 id와 서버로 전송해본다
+ 
+ <canvas id="myChart"></canvas>
+ let chart = document.getElementById('myChart');
+ 

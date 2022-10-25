@@ -1,0 +1,253 @@
+1.
+admin_side_menu.jsp >
+<a href="sales_camp_yearly.bam"><span>캠핑장 연도별 매출</span> </a>
+
+2.
+SalesManageController.java >
+@RequestMapping("sales_camp_yearly.bam")
+	private String salesChartY() {
+		if(session.getAttribute("admin") == null) {
+			return "redirect:login.bam";
+		}
+		return "admin/sales/chart_yearly/"+WebTitle.TITLE+"매출 통계";
+	}
+
+3.	
+	chart_yearly.jsp > 
+	$(document).ready(function()
+	
+	<table id="camp" class="display" style="width:100%">에 의해 
+	$('#camp').DataTable
+	ajax : {"url": "campData.bam",
+	해당 url로 값을 보내겠다
+	
+	4.
+	@Autowired
+	CompanyService service;
+	CompanyManageController.java > 
+	@ResponseBody
+	@RequestMapping(value="campData.bam", produces = "application/text; charset=UTF-8")
+	private String campData() {
+		return service.get_campList();
+	}
+	
+	5.
+	CompanyService.java >
+	CompanyServiceImpl.java >
+	public String get_campList()
+	List<Camp> campList = campMapper.selectCamp();
+	
+	5-1 
+	CampMapper.java > 
+	CampMapper.xml > 
+<select id="selectCamp" resultType="Camp">
+      select * from CAMP
+</select>
+캠핑장 전체 목록을 가져온다
+CampMapper.java > 
+CompanyServiceImpl.java >
+
+5에다가 List<Camp> 타입의 capmList 객체에 캠핑장 전체 목록을 저장한다
+
+5-2
+CompanyService.java >
+CompanyManageController.java > 
+private String campData() 
+최종적으로 해당 메소드에서 ajax로 캠핑장 전체 목록을 반환해준다
+
+6.
+chart_yearly.jsp > 
+$(document).ready(function()
+ajax 에 캠핑장 전체 목록이 저장됨
+contentType는 보내는 타입을 지정해준다 dataType는 서버에서 어떤 타입을 받을 것인가
+<table id="camp" class="display" style="width:100%"> 부분에 받아온 값들을 넣어준다
+
+7.
+chart_yearly.jsp > 
+$(document).ready(function()
+columns: [{ data: "", defaultContent: "<button onclick='drawChart(this)'>차트보기</button>"}
+
+8.function drawChart(e)
+chart_yearly.jsp >
+function drawChart(e)
+
+8-1.
+let camp_idx = e.parentElement.nextElementSibling.innerText;
+camp_idx  해당 요소(e)의 부모의 형제태그를 수정하기 위한 변수
+
+let year = '${sysYear}';
+<option value="<c:out value="${sysYear}"/>" selected>${sysYear}</option>
+
+<select id="year"><option>
+const opt = document.querySelectorAll("#year option");
+반환된 html 요소를(#year option) 상대로 자연스럽게 DOM API 에서 제공하는 다른 메서드 사용가능
+
+8-2.
+if(opt[i].value === year)
+opt의 i번째 요쇼 value 가 year와 동일하다면 
+<option value="<c:out value="${sysYear}"/>" selected>${sysYear}</option>
+													<option value="<c:out value="${prevYear}"/>">${prevYear}</option>
+													<option value="<c:out value="${lastYear}"/>">${lastYear}</option>
+													<option value="<c:out value="${pastYear}"/>">${pastYear}</option>
+selected 된 opt의 i번째 요소에 'selected'를 저장하고 반복문을 나온다 
+(하나라도 선택 된다면 구문을 탈출한다)
+
+8-3.
+const xhttp = new XMLHttpRequest(); // xmlHttpRequest생성
+xhttp.onreadystatechange = loader; //readystate에 변화가생기면 호출되는 함수
+xhttp.open('GET', './sales_data_each_m.bam?camp_idx='+camp_idx+'&year='+year, true);
+
+9. xhttp.open 부분
+SalesManageController.java >
+SalesService service;
+@ResponseBody
+	@RequestMapping(value="sales_data_each_m.bam", method=RequestMethod.GET, produces="application/json")
+	private List<?> salesDataCampM(Integer camp_idx, String year) {
+		return service.selectMonthlyByCampService(camp_idx, year);
+	}
+9-1.
+SalesService.java > 
+SalesServiceImpl.java >
+public List<Revenue> selectMonthlyByCampService(int camp_idx, String year)
+해당 메소드의 매개변수는 ajax에서 받아온 값 즉, 캠핑장 전체 목록에서 받은 값 이다.
+List<Revenue> list = mapper.selectMonthlyByCamp(query);
+
+9-2.
+SalesMapper.java > 
+SalesMapper.Xml > 
+<select id="selectMonthlyByCamp" resultType="Revenue" parameterType="hashmap">
+			SELECT
+		    c.camp_name,
+		    b.camp_idx,
+			SUM(b.total_fee) as total_sale, SUM(b.service_fee) as earning, 
+		    SUM(b.total_fee) - SUM(b.service_fee) as profit,
+		    ROUND(((SUM(b.total_fee) - SUM(b.service_fee)) / SUM(b.total_fee))*100, 2) as ROS,
+		    COUNT(b.imp_uid) as count_sale, 
+			date_format(b.bdate, '%Y-%m') as month
+		FROM 
+			BOOKING b
+		LEFT OUTER JOIN
+		    CAMP c
+		ON 
+			c.camp_idx = b.camp_idx
+		WHERE
+		    b.CAMP_IDX=#{camp_idx} and date_format(b.bdate, '%Y')=#{year} and b.S_NO=1
+		GROUP BY 
+			date_format(b.bdate, '%Y-%m'), c.camp_name, b.camp_idx
+		ORDER BY 
+			date_format(bdate, '%Y-%m') asc
+	</select>
+=> 
+select >
+camp테이블의 camp_name, booking 테이블의 camp_idx, 
+booking 테이블의 total_fee의 총 합을 total_sale, booking 테이블의 service_fee의 총 합계는 earning, 
+
+booking 테이블의 total-fee의 총 합 - booking 테이블의 service_fee의 결과는 profit,
+
+(booking 테이블의 total_fee의 총 합 - booking 테이블의 service_fee)을 booking 테이블 total_fee의 총 합에 100을 곱한 값으로 나누고
+이를 반올림하여 소수 둘째 자리까지 표현 한 걸 ROS, 
+
+booking 테이블에서 imp_uid 의 개수는 count_sale, 
+
+booking 테이블의 bdate를 Y-m 형태로 저장한 걸 month 라고 하겠다.
+
+from >
+booking 테이블은 전부 다, camp 테이블은 camp테이블의 camp_idx 와 booking 테이블의 camp_idx가 일치하는 부분만 
+
+where > 
+booking 테이블의 camp_idx 와 booking 테이블의 bdate 와 booking 테이블의 S_NO 가 1 일 때 
+
+group by > 
+booking 테이블의 bdate, camp 테이블의 camp_name, booking 테이블의 camp-idx의 그룹으로, 
+
+ORDER BY > 
+bookig 테이블의 bdate를 Y-m 형식으로 하고 이것의 오름차순으로
+
+=> 
+구분(연도) = month
+총 매출액(원) = total_sale 
+거래 수(회) = count_sale
+업체 순 이익(원) = profit
+영업 수수료(원) = earning
+매출 수익률(%) = ROS
+
+9-3
+SalesMapper.java > 
+SalesServiceImpl.java >
+9-1 에 
+List<Revenue> 의 객체 list에 저장한다.
+SalesManageController.java >
+private List<?> salesDataCampM(Integer camp_idx, String year) 에서
+chart_monthly.jsp 으로 반환해준다
+
+10. function loader()
+chart_monthly.jsp >
+xhttp.onreadystatechange = loader;
+function loader()
+여러번 호출되며, 값이 성공적으로 들어온다면 해당 값들을 tempStr에 저장한ㄷ
+
+
+document.querySelector("#innerData").innerHTML = tempStr;
+<tbody id="innerData">
+document.querySelector 는 선택자에 부합하는 요소 중에서 첫 번째 요소만을 반환한다
+
+document.querySelector("#camp_name").innerText = jsonObj[0].camp_name;
+<span id="camp_name">
+
+
+document.querySelector("#camp_idx").value = jsonObj[0].camp_idx;
+<input id="camp_idx" type="hidden" value="">
+
+해당 html 부분으로 값을 보내줘서 값이 뜨는 형식이다
+
+
+11.function redrawChart(val) 
+chart_monthly.jsp >
+function redrawChart(val)
+
+<input id="camp_idx" type="hidden" value="">
+let camp_idx = document.querySelector("#camp_idx").value;
+canp_idx 에 부합하는 요소 중 첫 번째 만 반환한다
+
+year 초기화 선언
+
+11-1
+const xhttp = new XMLHttpRequest();
+값을 서버로 보내기 위한 객체 생성
+
+xhttp.onreadystatechange = loader;
+readystate가 변경되면 호출할 함수
+
+11-2 
+function loader()
+if(xhttp.readyState === XMLHttpRequest.DONE)
+readyState에 이상이 생긴다면
+
+if(status === 200)
+요청한 문서가 서버에 존재한다는 의미 , 
+서버에서 들어온 값을 변환후에 저장한다
+JSON.parse을 통해 JSON 문자열의 구문을 분석하고 그 결과에서 값이나 객체를 생성한다
+
+for(let i=0;i<jsonObj.length;i++)
+trmpStr에 받아온 값들을 차례대로 저장한다
+저장한 month 값을 -로 구분하고 parseInt를 실행하고 이를 저장한다
+
+받아온 값들을
+<tbody id="innerData">, <span id="camp_name">, <input id="camp_idx" type="hidden" value=""> 에서 띄우게 한다.
+
+=> function redrawChart 종료
+
+
+
+
+
+
+
+
+
+
+===============================================================================================
+
+
+
+		

@@ -1,0 +1,204 @@
+client_header.jsp에서 회원 정보 클릭시 onclick이벤트로 인해 /member/mypage.bam?selected=info로 이동
+MemberController에서 맵핑을 받아 selected=info를 매개변수로 받아 private ModelAndView myPage 객체생성
+member가 null이면 로그인으로 redirect 아니면 memberService.check_owner_service로 이동
+
+**여기서 member은 로그인시 MemberserviceImpl에서 login메소드를 실행해 session.setAttribute("member", member);로
+받아온 member 변수의 키값이다. 그러면 세션에 셋이 되어있겠쥬?
+
+그래서 Member member = (Member)session.getAttribute("member"); 이런식으로 세션에서 받아온 member를
+Member형의 member변수에 넣어넣어~ 현성이 넣는거 좋아하자너~
+
+그래서 이제 분기를 해주지 A_no이 1(일반),2(사업자)인지 보고나서 2면 쿼리돌려서 사업자 정보 뽑아주고 owner으로 값저장
+만약 사업자인데 캠핑장 미등록 사업자면 check키를 가지고 false저장! 반대는 true저장!
+
+그러고나서 my_page.jsp로 이동하는데 <c:if test="${member.a_no ne 1 && check eq true}"> 이런식으로 위에서 check를
+활용해 사업자인지 비사업자인지 판별해주고 사업자라면 네비게이션바에 캠핑장 정보와 캠핑장관리가 뜨게 해주징.
+캠핑장 정보와 캠핑장관리는 이 글의 마지막에 정리할예정.
+
+이제 사업자가 아닌 사용자 입장에서 본  my_page.jsp를 살펴보자면 test="${ selected eq 'info'}" 이런식으로 selected 값에 따라
+앞단 client_header.jsp에서 회원정보, 예약내역, 찜목록 클릭시 보여주는 구문이 두개씩 중복되어서 있는 것을 확인할수있는데
+aria-selected="true"이부분이 true 또는 false로 분기 되어있다. 이말은 true된 부분은 nav버튼이 활성화 되서 빨개지고 false는
+비활성화되서 색이 없다. 즉, 내가 누른 버튼은 true되서 빨개지고 아닌 것은 false로 변화가 없음. 그리고 페이징처리를 위한
+히든 구문이 중간에 <input id="next-page" type="hidden" value="">식으로 삽입되어있음. 주의 깊게 볼것.
+
+(1) selected eq 'info'
+
+오우 프로필은 굉장히 쉽네 일단 info로 설정되서 분기에 의해 프로필창이 뜨면 닉네임, 등급, 포인트, 이름, 이메일이 앞에서
+로직굴려서 받아온 값 먹고 뜨겟찌 ?? 먼저 수정 버튼 누르면
+
+===================================수정=========================================
+
+onclick="getUploadTags();"에 의해서 my-page.js가야재 일단 $('#user-name').removeAttr('readonly'); 이름 읽기전용 풀어주고
+input_html에 HTML구문을 새로 구성해주지 여기서 신기한게 my_page.jsp 코드라인 473부분 보면
+<input type="hidden" id="nick" value="${member.nickname}"> 이렇게 닉네임을 히든으로 숨겨놨는데 이걸 여기서 쓰는겨.
+
+type을 hidden -> text로 바까줘서 id="test" 부분에  $('#test').html(input_html); 제이쿼리 먹여줘서 수정 눌럿을때
+닉네임이 뿅하고 나타나게되지 여기서 수정해주고 저장누르면 $('.update').attr('onclick', 'update_mem();');에 의해서
+my-page.js에 있는 update_mem() 함수 발똥!!! $('.update').attr('type', 'submit'); submit에 의해서 form태그로 감싸여진
+action="update_member.bam" 발똥 !! 맵핑 따라 들어가보면 MemberController -> memberService.update_member(member)
+로직 돌아서 memberMapper.update_member(member);로 수정정보 업데이트 해주고 memberMapper.login(member.getEmail())로
+현재 로그인된 내 수정정보를 return받아 컨트롤러에서 session.setAttribute("member", memberService.update_member(member))로
+세션에 member키값으로 셋해주지 그걸가지고 다시 my_page.jsp로 가자
+
+=================================================================================
+
+다음으로 비밀번호 변경 누르면
+
+===================================비밀번호변경=========================================
+
+my_page.jsp에 미리 셋팅해둔 모달이 뙇! 원하는 비밀번호 변경후 변경버튼 누르면 먼저 form 태그의 id="pwd-form"가 발동되서
+코드라인 291부분에 제이쿼리함수가 실행되서 유효성검사 싹 해주고 훌륭하다 그러면 action="change_pwd.bam" 뙇!
+앞단에서 받아온 name="old-pwd"를 MemberController에서 @RequestParam("old-pwd") String old_pwd 기존 비번 받아오고
+session.setAttribute("member", memberService.update_pwd(member, old_pwd, response));에서 서비스 드가서
+update_pwd메소드실행으로 if(!old_pwd.equals(memberMapper.login(member.getEmail()).getPwd())) 구문으로 유효성 검사함해주고
+유효성 검사 통과되면 else로 넘어가서 memberMapper.update_pwd(member); 구문 실행되서 비밀번호 업데이트가 뙇!
+return memberMapper.login(member.getEmail()); 새로이 변경된 회원정보를 뽑아서내서 리턴을 뙇!
+호출한 컨트롤러 다시가서 session.setAttribute("member", memberService.update_pwd(member, old_pwd, response));
+member를 키값으로 뽑아온 회원정보를 세션에 셋을 뙇!! return "redirect:mypage.bam" 구문으로 비밀변호 변경완료가 뙇!
+
+=================================================================================
+
+후 마지막으로 계정 삭제 들어간다.
+
+===================================계정 삭제=========================================
+
+계정 삭제 누르면 역시나 모달이 뙇! 비밀번호 제대로 입력하고 탈퇴하기 누르면 action="leave.bam" 발동! 컨트롤러 가야겠지?
+컨트롤러에서 제대로 로그인이 됐으면 memberService.delete_member 서비스 가야겠지 ? 왔으면 
+if(memberMapper.delete_member(member) != 1) 이 구문으로 유효성 검사 때려주고 비밀번호 제대로 입력해줬으면 member
+테이블에서 회원정보 삭제 때려주고 lMemberMapper.insertLeaveMember(leavingMember); 구문에 의해 L_MEMBER 테이블에
+탈퇴회원 정보가 저장되겠쥬? return true; 반환해주고 다시 호출한 컨트롤러 가보면 true값에 의해서 
+session.removeAttribute("member"); 구문으로 세션 끊어주고 redirect로 불밤야밤 메인페이지로 이동~ 끝~~~
+
+=================================================================================
+
+
+
+(2) selected eq 'booking'
+
+onclick="call_booking_info();으로 인해 booking-info.js로 가서 ajax로 /member/booking_info.json로 맵핑을 쏴준다.
+맵핑받은 MemberController에서 -> memberService.show_booking_info 에서 보여지는 예약수 6개 설정, 페이징설정해주고
+bookingMapper.select_booking_count 쿼리돌려서 예약한 캠핑장 수 뽑아줘서 페이징처리에 이용하고
+bookingMapper.select_booking에서 예약한 캠핑장의 실질적인 정보들을 뽑아내준다. 이정보들을 가지고 
+ModelAndView response = new ModelAndView("/client/member/booking_list"); 설정해서 리턴
+
+다시 booking-info.js에서 responseData로 MemberController에서 가져온 데이터를 받아 제이쿼리 구문이 시작하는데
+MemberController를 보면 @ResponseBody라는 어노테이션이 걸려있는 것을 확인할수있다. 이것은 ajax에서 json형태로
+responseData 변수를 넣어 json형태의 데이터 값을  가져올 수있게 해줌.
+
+페이징 처리 구문:: document.getElementById('next-page').value = 2; 이런식으로 next-page에 페이징 처리를 위한
+변수값 설정해주고 페이징처리를 위한 준비를 끝냄.
+
+my_page.jsp에서 <div id="booking-box" class="row"></div>로 id 걸어주고 booking-info.js에서
+$('#booking-box').html(responseData);으로 앞단에서 ModelAndView로 받아온 booking_list.jsp를 body부분에 쏴줘서
+예약한 캠핑장 내역들이 촤르르 여기서 예약한 캠핑장 6개씩 페이징 처리되서 보여지겠쥬?
+
+booking_list.jsp 부분을 뜯어보자면 뭐 별거없이 뒷단에서 로직돌면서 가져온 값들을 활용해서 ${} 이런식으로 값을 넣어주징.
+예약결제까지하면 리뷰랑 환불 버튼 활성화 되는거 다들알재? 그부분들어간다~
+
+=====================================리뷰============================================
+
+우선 리뷰부터 보면 review_state컬럼잇자네 그걸 이용해서 T냐 F냐로 분기 때려서 리뷰작성 또는 리뷰완료가 뜨게됨. 이게 근데또
+간단하게 뜨지않지 리뷰작성 누르면 그놈의 modal 떠버리지 여기에 .star_grade 먹여서 booking_list.jsp 내에서 제이쿼리 함수를
+$('.star_grade a').click(function() 이런식으로 클릭시 발동하게끔 작성시켜 별모양 누르면 노란색으로 변하는걸 확인할수있지.
+
+별점 주기, 내용을 작성후 작성완료 버튼을 누르면 onclick="submit_review" 함수 발동되서 review.js에서 index설정 해주고 다시
+booking_list.jsp에서 보면  <form name="form" id="form${list.imp_uid}" method="post" action="add_review.bam"> 이런식으로
+form태그에 id="form${list.imp_uid}"로 설정후 최종적으로 action="add_review.bam"이 실행 돼서 컨트롤러 -> 서비스 거쳐서 
+mapper에서 review_state = 'T'로 설정해주고 return "redirect:mypage.bam";로 리다이렉트 해주면 
+add_review.bam에 의해서 my_page.jsp로 가게된다... 이게모두 review_state가 F -> T로 가는 과정이고 최종적으로는 리뷰완료뜸.
+
+=====================================================================================
+
+=====================================환불===========================================
+
+환불부분도 마찬가지로 DB컬럼이용해서 T,F값으로 분기때리는데 환불 요청 버튼 누를시 onclick="setVal('${list.imp_uid}')이 
+발동되서 refund.js로 가자 ...
+
+왔으면 setVal함수에 예약정보를 저장해주고 ajax방식으로 /refund/refundableDate 맵핑쏴주니까 절로 다시가자...
+-> service.getRefundableDate(check_in)에서 [0] = today / [1] = 체크인 4일 전 / [2] 체크인 3일전... 이런식으로 배열 설정해주고
+if문으로 분기를 멕여서 예약일 3일전부터는 환불불가 설정을 해줘서 modal로 뜬 refundModal에서 환불버튼 비활성화 시켜주징
+다시 예약일이 3일전이 아니다 그러면 환불 요청 버튼이 활성화되고 그걸 누르면 onclick="cancelPay()"으로 인해 refund.js로....
+
+refund.js에서 맵핑을 /refund/refund 또 쏴주네? 그럼 가봐야지 RefundController에서 service.getImportToken()로 아임포트
+인증토큰 다시 가져오고 service.updateBooking에서 mapper.updateS_no로 인해 S_NO가 1(결제완료)에서 2(취소완료)로 변하고
+잘 됐으면 boolean형인 flag변수에 true값이 담기겠쥬 ? 그리고 밑에 point는 그냥 포인트 회수해서 원래대로 되돌리는 구문이라고
+생각하자 힘들다...
+
+그래서 로직이 잘돌앗다 그러면 return true로 반환되고 다시 RefundController로 돌아가서 boolean형인 flag에 리턴받은 true값을
+집어넣고 분기를 때려서 service.cancelPayment(token, imp_uid) 발동! 서비스에서 cancelPayment 살펴보면 아임포트 API로직이
+막돌다가 Booking booking = mapper.selectBookingOne(imp_uid)으로 인해 해당 예약내역을 뽑아내지고 뽑아진 예약내역에
+해당하는 캠핑장 camp_idx를 가지고 mapper.minusTotalBooking(booking.getCamp_idx())를 실행해 해당 캠핑장에 TotalBooking을
+-1로 줄임으로써 DB의 total_booking컬럼을 -1만큼 줄여줌.
+
+이게 얘네가 엄청 깔끔하게 한게 booking테이블에 S_NO컬럼 설정해서 취소시에 또 복잡하게 delete구문으로 예약내역
+삭제하는게 아니라 그냥 업데이트 먹여서 예약내역은 그대로 살아있고 S_NO컬럼만 1 -> 2로 설정되게 해놨네 ㄷㄷㄷ
+
+마지막으로 booking_list.jsp 맨 밑에 보면 <input type="hidden" id="check_result" value="false">이런식으로
+분기시켜서 예약한 캠핑장 list가 없으면 false, 있으면 true로 false값을 가져왔다면 booking-info.js에서
+if($('#check_result').val() == "false") 이렇게 분기해서 예약한 내역이 없습니다 구문이떠버린다. 
+
+로직 잘 돌았으면 다시 refund.js가서 JSON방식으로 데이터들 받아오고 window.location.href="./mypage.bam"으로인해서
+my_page.jsp로 가자... 환불도 여기까지.... 여기서 끝날줄알았지? 아직 페이징 한발남았다...
+
+=====================================================================================
+
+=====================================더보기============================================
+
+빌어먹을 <button type="button" id="load-btn" class="theme-btn border-0" onclick="paging()"> 먹여진 더보기 버튼 누르면
+6개씩 보여지도록 페이징처리한것이 발동되는데 예약내역이 6개 이상 있으면 페이지가 1,2 이런식으로 생기겟지 ? 그걸 이제 보자고
+
+onclick="paging()"에 의해서 다시 booking-info.js로 가서 paging()함수가 발동되고 /member/booking_info.json 맵핑으로
+컨트롤러 -> 서비스 돌아서 아까 (2) 초반에 설명한 대로 내가 예약한 캠핑장 리스트를 쫙 뽑아줄거야 그걸 가지고 1페이지에서
+다 못보여준 리스트들을 next-page를 이용해 페이징을 구현할거야 내가 글 위에서 언급햇지
+<input id="next-page" type="hidden" value=""> 주의깊게 보라고
+
+$('#next-page').val(Number($('#next-page').val())+1);	//실직적인 페이징처리 다음페이지나타내줌 1,2,3 이런식으로  
+$('#booking-box').append(responseData);	// 기존에 있던 HTML 요소 뒤에 ++ 이 구문으로 추가적인 리스트들을 보여주는것
+
+여기서 페이징이 끝난게 아니여 booking-info.js에서 call_booking_info() 부분보면 document.getElementById('next-page').value = 2;
+라고 next-page값을 2라고 설정해주는데 그 이유가 여기서 나오지 paging()함수 밑에 if문으로 분기 되어있는데
+next-page는 위에서 2라고 설정해줘서 2겠지? page_count는 로직굴려 받아온 실질적인 페이지수야 예를 들어 실직적인 페이지 수가
+3이면 if($('#next-page').val() > page_count) 구문이 false나서 정상적으로 페이징처리되겠지? 근데 실직적인페이지수가 1이면
+if($('#next-page').val() > page_count) 가 true먹어서 $('#load-btn').attr("disabled", "disabled");  $('#load-btn').text("END");
+jquery구문이 활성화되고 결론적으로 더보기 눌렀을때 바로 END가 뜨는겨 한번 해봐 더보기에서 바로 END로바뀜
+
+페이징부분은 조금 복잡할수도있으니까 잘읽어보고 물어보면 추가 설명해줄겡 이제 진짜 끝임 후......
+
+=================================================================================
+
+(3) selected eq 'heart'
+
+onclick="call_heart_list();에 의해서 heart-list.js로 이동 하지 세부적인것들 싹 세팅해주고 아 여기서 리뷰랑 비슷해서 간략하게하도록
+하겠어. 페이징처리 그리고 분기 때려서 true, false 값 가지고 false면 찜 내역이 없습니다가 뜨게 설정해주고
+heart_list.jsp 맨 밑에보면 히든던전으로 분기때리는 구문있으니까 잘보고 ajax로 /member/heart_list.json 맵핑쏘면
+또 가봐야겟찌? MemberController에서 맵핑 받아서  memberService.show_heart_list 서비스로 또가자 왔으면 세션이랑 페이지
+초기 세팅해주고 보여지는 페이지수는 int pageSize = pageUtil.getPageSize("6", session); 6개로 지정!! 페이징 처리를 위한 쿼리구문
+준비 해주고 heartMapper.select_heart(query)에 의해서 찜받은 캠핑장 리스트정보 싹 뽑아서 list형태로 저장!! 이걸가지고 
+
+ModelAndView로 /client/member/heart_list 뷰설정해주고 response.addObject("page", page); response.addObject("hlist", hlist);
+페이지, 캠핑장 리스트 추가해줘서 컨트롤러로 리턴~ 해주는데 그전에 heart_list.jsp 살펴보면 list형태로 저장한 값들을 뷰에다가
+대입을 해주지 그래서 캠핑장 리스트가 뜨는겨 몇개가 뜰까? 총 6개씩 페이징처리되서 뜨겟쥬? 찜한 캠핑장이 맘에안든다
+그러면 삭제버튼 클릭 그러면 모달이 뙇! 정말 혼토니 진짜로 삭제하고 싶다 그러면 삭제하기 버튼을 눌러봐 그럼 우선
+
+onclick="submit_delete(${hlist.camp_idx}) 발동되서 review.js로 가겟지? 거기서 document.getElementById('form' + index).submit()
+이 구문으로 현재 선택한 캠핑장 index를 submit시키고 이걸 heart_list.jsp 에서 코드라인 38부분 보면 
+<form method="post" id="form${hlist.camp_idx}" action="delete_heart.bam"> 이런식으로 받고 그걸 action="delete_heart.bam"
+시켜서 진정한 삭제 로직이 돌게 되겠지? 그럼 delete_heart.bam으로 이동해볼까?? 
+
+다들 MemberController왓재 ? memberService.delete_heart_list(email, camp_idx); 타고 서비스도 다들 잘 도착햇재?
+받아온 이메일과 캠프IDX 받아서 heartMapper.deleteHeart(query) 쿼리 돌려서 DB에 heart 테이블에서 내맘속에 삭제.
+
+타고타고 호출한 컨트롤러가면 return "redirect:mypage.bam"으로 my_page.jsp다시 가서 찜 목록 보면 잘 삭제가 되었다 ㅎㅎ 끝!
+
+=================================================================================
+
+
+
+
+
+
+
+
+
+
+

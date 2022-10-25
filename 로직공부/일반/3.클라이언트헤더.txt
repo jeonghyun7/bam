@@ -1,0 +1,51 @@
+##########클라이언트 헤더##- client_header.jsp########
+
+1. 클라이언트 헤더에서는 main.js의 자바스크립트 아래 구문을 통하여 
+헤더 로고버튼 클릭시 사이드메뉴 열기 / 사이드메뉴의 X버튼 클릭시 닫힘 기능이 있습니다.
+
+/*=========== Mobile Menu Open Control ============*/
+/*클라이언트 헤더 로고 메뉴 클릭하여 사이드메뉴 오픈 */
+  $(document).on('click','.logo-right-content .side-menu-open', function () {
+  $('.side-nav-container').addClass('active');
+ });
+
+ /*=========== Mobile Menu Close Control ============*/
+ /* 사이드메뉴오픈 상태에서 X누르면 꺼짐*/
+    $(document).on('click','.humburger-menu .side-menu-close', function () {
+    $(".side-nav-container, .side-user-panel").removeClass('active');
+   });
+
+--------------------------------------------------------------------------------------
+2. client_header.jsp
+#최상단의 로고버튼 구문 관련하여 
+*로그인시 -> 로그인한 멤버이름<h4 id="name" class="su__name">${member.name}</h4>
+*미로그인시 -> 불밤로고이미지가 출력
+<c:if test="${member == null }">
+ <div>
+    <img src="/images/asdad.png" style="padding-left:15px">
+ </div>
+</c:if>
+
+------------------------------------------------------------------------------------------
+3. client_header.jsp
+#메뉴 구성에 대해서는
+*로그인시 -> 회원정보/예약내역/찜목록/업체문의 구성
+*미로그인시 -> 회원가입/로그인 구성
+
+-------------------------------------------------------------------------------------------
+4. client_header.jsp
+#로그아웃 관련하여
+*멤버가 로그인한 상태 member!=null이고
+(1)c:when태그로 멤버의 액세스토큰이 ne null이면 즉,액세스토큰이 있으면 
+ logout_naver?accessToken=${member.accessToken}식의 맵핑 구성이라서
+->>>>>>LoginController에서  @RequestMapping("logout_naver")을 가르켜 로그아웃하고
+<&알아두어야할 사실 <c:when태그에서 ne는 !=와 같은 뜻>
+
+(2)액세스토큰이없는 일반로그인의 경우
+c:otherwise태그로 들어와 login/logout.bam식의 맵핑구성이라서
+@RequestMapping(value = "/logout.bam", method = RequestMethod.GET)을 가르켜
+일반 로그아웃 메서드가 실행됩니다. 
+
+
+
+

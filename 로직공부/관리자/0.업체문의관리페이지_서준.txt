@@ -1,0 +1,86 @@
+################################################################
+업체문의 관리
+
+admin_side_menu.jsp에서 경로 inquiry_manage.bam 지정
+
+==========================================================
+inquiryManageController.java
+
+@RequestMapping("inquiry_manage.bam")을 찾아감 inquiryManage()메소드 실행
+
+if 통해 세션만료되면 로그인 아니면 "admin/inquiry/inquiry_manage/"+WebTitle.TITLE+"업체 문의 관리" 경로 로 이동
+
+==========================================================
+inquiry_manage.jsp
+
+안의 div값으로 id=card-body-table 와 class=card-body를 따라 들어가면 js 파일 실행 
+(((이유는 window.onload = function(){
+	getInquiryList(1);}     때문에 인터넷이 로드되면 같이 실행 )))
+==========================================================
+inquiry_manage.js
+
+로드되면서 같이 실행되는 getInquiryList(cp)로 url=inquiry_list.json실행  이 경로로 들어가면 
+(method=GET)
+==========================================================
+InquiryManageController.java 안의
+
+@GETMapping("inquiry_list")호출 getInquiryList실행
+
+inquiryService.getInquiryListService 객체를 response에 저장  (getInquiryListService로 이동)
+
+===========================================================
+InquiryManageService.java
+
+getInquiryListService실행 listCount로 inquirymanagemapper.xml안의 selectCountinquiry쿼리문 실행
+(반환타입은 int) 를 listCount에 넣어주고      다음로직수행후
+
+List<Inquiry> inquiryList = inquiryMapper.selectInquiryAndState(query); 구문에 의해 
+selectinquiryandstate쿼리문 실행  (반환타입은 inquiry)
+
+받을 값을 저장하고 response형태로 반환
+
+==========================================================
+InquiryManageController.java 
+
+반환받은 값을 mav의 response에 저장하고  setviewname으로 뷰에 해당하는 경로를 저장해준다음
+
+return 타입으로 반환 성공시 ajax실행 
+
+===========================================================
+inquiry_manage.js안의 아작스 success구문 실행 html의 형식으로 최종리턴받은값을 출력 !
+
+
+
+============================================================
+inquiry_list.jsp에서 문의된 내용 클릭시 onclick이벤트 발생
+
+inquiry_manage.js안의 row_click함수 실행 
+
+url로 inquiry_detail.json methot를 GET으로 보낸다.
+
+============================================================
+InquiryManageController.java
+
+getMapping("inquiry_detail") 받고 getInquiryDetail 메소드 실행
+
+return 값으로 getInquiryDetailService를 주고 service로 이동
+
+============================================================
+InquiryManageServiceImpl.java
+
+오버라이드된 getInquriyDetailService 메소드 실행
+
+return 값으로 xml파일의 selectInquiryOne실행 (InquiryManageMapper.xml)
+
+(반환타입 inquiry) 반환받은 값을 받고 service->controller로 다시 돌아와 js로 return 받은 값을 보내준다.
+
+success를 실행해서 html 형식으로 showDetail을 보내줌 view출력
+
+
+
+
+
+
+
+
+

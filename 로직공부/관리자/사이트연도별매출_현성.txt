@@ -1,0 +1,110 @@
+1.
+admin_side_menu.jsp >
+<a href="sales_bam_yearly.bam"><span>사이트 연도별 매출</span> </a>
+
+2.
+SalesManageController.java >
+@RequestMapping("sales_bam_yearly.bam")
+	private String salesChartYWC() {
+		if(session.getAttribute("admin") == null) {
+			return "redirect:login.bam";
+		}
+		return "admin/sales/chart_yearly_bam/"+WebTitle.TITLE+"매출 통계";
+	}
+==================================================loader=======================================================================
+3.	
+chart_yearly_bam.jsp >
+window.onload = function()
+	
+for(let k=0;k<myData.datasets.length;k++){
+			for (let l=0;l<myData.datasets[k].data.length;l++){
+				myData.datasets[k].data[l] = 0;
+			}
+차트 데이터 초기화, datasets(차트범례에 대한 속성)
+<canvas id="myChart"></canvas> 	
+
+const xhttp = new XMLHttpRequest();
+서버에서 값을 받아오기 위한 xttp 객체를 생성한다
+
+xhttp.onreadystatechange = loader;
+readystat의 상태가 변하면 loader 함수가 실행된다
+(서버를 통해 정상적으로 받아오면 JSON 문자열을 구분하는 객체에 저장후에 index에 들어오는 값별로 저장하고, 추후에 html로 출력해준다)
+
+xhttp.open('GET', './sales_data_bam_y.bam', true);
+
+3-1.
+SalesManageController.java > 
+SalesService service;
+@ResponseBody
+	@RequestMapping(value="sales_data_bam_y.bam", method=RequestMethod.GET, produces="application/json")
+	private List<?> salesDataAllY() {
+		return service.selectYearlyAllService();
+	}
+	
+
+SalesService.java > 
+SalesServiceImpl.java > 
+@Override
+	public List<Revenue> selectYearlyAllService() {
+		List<Revenue> list = mapper.selectYearlyAll();
+		return list;
+	}
+	
+
+SalesMapper.java >
+SalesMapper.xml >
+<select id="selectYearlyAll" resultType="Revenue">		
+			SELECT 
+			SUM(total_fee) as total_sale, SUM(service_fee) as earning, 
+		    SUM(total_fee) - SUM(service_fee) as profit,
+		    ROUND(((SUM(service_fee) / SUM(total_fee) )*100), 2) as ROS,
+		    COUNT(*) as count_sale, 
+			date_format(bdate, '%Y') as year 
+		FROM 
+			BOOKING
+		WHERE
+		    S_NO=1
+		GROUP BY 
+			date_format(bdate, '%Y')
+		ORDER BY 
+			date_format(bdate, '%Y') asc
+	</select>
+구분(일) = day
+총 매출액(원) = total_sale
+거래 수(회) = count_sale
+업체 순 이익(원) = profit
+영업 수수료(원) = earning
+매출 수익률(%) = ROS 
+
+SalesMapper.java >
+SalesServiceImpl.java > 
+public List<Revenue> selectYearlyAllService() 
+List<Revenue> 타입 list객체에 해당 DB값들을 저장하여 반환한다
+
+SalesService.java > 
+SalesManageController.java > 
+private List<?> salesDataAllY()
+해당 메소드에서 xhttp객체로 값을 반환해준다.
+
+3-2.
+chart_yearly_bam.jsp >
+받아온 값을  xhttp.send(); , loader() 를 통해 html로 보내준다
+
+==================================================loader=======================================================================
+
+==================================================myChart======================================================================
+4.
+var myCtx = document.getElementById("myChart").getContext('2d');
+<canvas id="myChart"></canvas>
+해당 id에 해당하는 부분을 2D로 표현한다
+(getContext() 메서드를 사용하여 드로잉 컨텍스트에 액세스 할 수 있습니다.)
+
+4-1
+var comboBarLineChart = new Chart
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>를 통해 그릴 차트를 그릴 객체
+type: 'bar'(바 타입의 차트)
+data: myData (범례, 표 상단에 그래프에 대한 설명)
+
+
+
+==================================================myChart======================================================================

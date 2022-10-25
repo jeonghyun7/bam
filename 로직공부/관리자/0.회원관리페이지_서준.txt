@@ -1,0 +1,98 @@
+##############################################################################
+로그인 후
+
+맨처음 관리자 페이지------admin/login.bam을 호출 
+
+adminController에서 postMapping값으로 login.bam호출
+
+if통해서 adminservice.loginAdminService이동
+
+============================================================
+AdminServiceImpl.java----------loginAdminService 메소드 실행
+
+hashMap을통해 키값 넣어주고 if를 adminMapper안에 selectAdmin 쿼리 실행
+
+반환타입 int형으로  1을 반환 그리고 다시 loginAdminService에 돌아와 리턴값으로 true/false값 반환
+
+다시 adminController안의 login으로 와서 true/false 반환 
+
+return 값으로true면 --- redirect:main.bam을 반환
+return 값이 false 면 ----redirect:login.bam을 반환
+
+=============================================================
+
+##########################################################
+##admin_main.jsp에서 회원 관리 버튼 클릭시 href:member_manage.bam 이동 ##
+##########################################################
+MemberManegeController.java
+
+
+사이드 메뉴에서 회원관리를 누르면 회원(member_manage.bam) / 탈퇴한 회원(leave_member_manage.bam) 경로로 이동
+
+MemberManageController로 이동 매핑값이 member_manage_bam으로
+
+modelandview로 값 null값 초기화 해주고 if를통해 세션 만료되면 로그인창으로 아니면 
+
+return 값으로 "admin/member/member_manage/"+WebTitle.TITLE+"회원 관리 "창을 띄어준다.
+
+==============================================================
+member_manage.jsp로 들어가 view페이지를 띄어주고 
+
+회원정보 리스트를 받아오는 id=card-body-table 따라 들어가면  
+
+window.onload = function(){
+	getMemberList(1);} 에 의해 페이지 로딩시 같이 진행 
+
+member_manage.js로 이동
+
+getMemberList 를 호출 아작스 실행 url로 member.json하면 (get방식으로 보냄 currentPage값을 가지고)
+
+=============================================================
+
+---MemberManageController.java---
+
+getMapping으로 member을 받고 
+
+getMemberList실행 memberService.getListOfMembersService 에 의해 memberManageService의 getListOfMembersService 실행
+
+=============================================================
+
+---MemberManageServiceImpl.java---안의 getListOfMembersService실행
+
+int listCount = memberMapper.selectCountMember(); 실행으로 xml파일로 이동(mamberManageMapper.xml)실행
+(resulttype으로 int형 반환)
+
+
+List<MemberAndAuthority> memberList = memberMapper.selectMembers(query);이 구문에 의해  xml 쿼리 실행
+(resulttype으로 com.bam.model.MemberAndAuthority 반환)
+값을 다 저장하고 return response해준다.
+
+
+다시 controller로 돌아와 반환받았던 값들을 response에 저장하고 
+
+response.setviewname으로 뷰페이지를 저장----
+
+성공시 아작스로 돌아가 저장된 responseData와 뷰 페이지를 보여준다.
+
+
+
+=============================================================
+회원 리스트에 있는 회원을 클릭하면 member_list.jsp에 있는 row_click이벤트 발생 
+
+ajax를 통해 url="member_detail.json"를 통해 (GET)
+
+membermanagecontroller.java의 getmapping("member_detail")호출 getMemberInfo메서드 실행
+
+return 값으로 memberService.getMemberInfoService 주니 membermanageserviceimpl.java 로 이동
+
+=============================================================
+membermanageserviceimpl-----
+
+getMemberInfoService 메소드 실행 return 값으로 memberMapper.selectMemberInfo 을 주니 
+
+membermanageMapper.xml안의 selectMemberInfo 실행-- resulttype이 com.bam.model.MemberAndOwner임
+
+return 받은 값을 다시 Controller까지 올라간다. Controller에서 성공적으로 실행이 완료되면 아작스 success로 이동
+
+responseData 실행 html에 창에 회원정보창이 나온다.
+

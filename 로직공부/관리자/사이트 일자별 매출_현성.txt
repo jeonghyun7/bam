@@ -1,0 +1,223 @@
+1.
+admin_side_menu.jsp >
+<a href="sales_bam_daily.bam"><span>사이트 일자별 매출</span> </a>
+
+2.
+SalesManageController.java >
+@RequestMapping("sales_bam_daily.bam")
+	private String salesChartMWD() {
+		if(session.getAttribute("admin") == null) {
+			return "redirect:login.bam";
+		}
+		return "admin/sales/chart_daily_bam/"+WebTitle.TITLE+"매출 통계";
+	}
+======================================================================================================================
+3.
+chart_daily_bam.jsp >
+window.onload = function()
+
+3-1
+chart_daily_bam.jsp >
+let year = '${sysYear}';
+let monthStr = '${sysMonth}';
+<option value="<c:out value="${sysYear}"/>" selected>${sysYear}</option>
+<select id="month" style="float:right; margin-right:10px;">
+사용자가 선택한 연도, 월
+
+3-2 => 년도 선택
+chart_daily_bam.jsp >
+const opt = document.querySelectorAll("#year option");
+<select id="year" style="float:right; margin-right:10px;">
+<option value=""/>" selected>${}</option>
+#year option의 최상단 요소만 로직에 선택 시킨다
+
+3-3
+chart_daily_bam.jsp >
+if(opt[i].value === year) 
+<select id="year" style="float:right; margin-right:10px;">의 
+<option value=""/> 즉 연도를 선택하면 해당 인덱스에 'selected'를 저장하고 반복문을 나온다
+
+3-4 => 월 선택
+chart_daily_bam.jsp >
+const opt2 = document.querySelectorAll("#month option");
+의 최상단 요소인 <select id="month">를 로직에 포함시키겠다
+
+if(opt2[i].value === monthStr)
+opt2[i].selected = 'selected';
+월을 선택하면 해당 인덱스에 selected라고 저장된다
+
+3-5
+chart_daily_bam.jsp >
+const xhttp = new XMLHttpRequest();
+서버로 값을 보내기 위한 객체 생성 
+
+xhttp.onreadystatechange = loader;
+readystate에 변동이 있을 때마다 loader 함수가 작동되게 끔 한다.
+
+3-6 => loader 함수
+chart_daily_bam.jsp >
+function loader()
+if(xhttp.readyState === XMLHttpRequest.DONE)
+readyState가 바뀌면 실행된다
+
+if(status === 200)
+오청한 문서가 서버에 존재한다면 200
+
+xhttp.responseText;를 받아 
+json 문자열의 구문을 분석하고 그 결가에서 값이나 객체를 생성한다
+
+for(let i=0;i<jsonObj.length;i++)
+tempStr에 서버에서 받아온 값들을 저장하고
+
+document.querySelector("#innerData").innerHTML = tempStr;
+<tbody id="innerData">의 최상단 요소에 html 타입을 넣어준다
+
+3-7 
+chart_daily_bam.jsp >
+xhttp.open('GET', './sales_data_bam_d.bam?month='+month, true);
+
+4. => xmlhttp가 받을 값들
+SalesManageController.java > 
+@Autowired
+SalesService service;
+@ResponseBody
+	@RequestMapping(value="sales_data_bam_d.bam", method=RequestMethod.GET, produces="application/json")
+	private List<?> salesDataAllD(String month) {
+		return service.selectDailyAllService(month);
+	}
+
+4-1 
+SalesService > 
+SalesServiceImpl > 
+@Override
+	public List<Revenue> selectDailyAllService(String month) {
+		List<Revenue> list = mapper.selectDailyAll(month);
+		return list;
+	}
+
+4-2
+SalesMapper.java > 
+SalesMapper.xml > 
+<select id="selectDailyAll" resultType="Revenue" parameterType="String">
+			SELECT 
+			SUM(total_fee) as total_sale, SUM(service_fee) as earning, 
+		    SUM(total_fee) - SUM(service_fee) as profit,
+		    ROUND(((SUM(service_fee) / SUM(total_fee) )*100), 2) as ROS,
+		    COUNT(*) as count_sale, 
+			date_format(bdate, '%Y-%m-%d') as day
+		FROM 
+			BOOKING
+		WHERE
+		    date_format(bdate, '%Y-%m')=#{month} and S_NO=1
+		GROUP BY 
+			date_format(bdate, '%Y-%m-%d')
+		ORDER BY 
+			date_format(bdate, '%Y-%m-%d') asc 
+	</select>
+
+구분(일) = day
+총 매출액(원) = total_sale
+거래 수(회) = count_sale
+업체 순 이익(원) = profit
+영업 수수료(원) = earning
+매출 수익률(%) = ROS 
+
+4-3 
+SalesMapper.java > 
+SalesServiceImpl > 
+List<Revenue> 타입 으로 list 객체에 해당 값들을 저장한다.
+
+SalesService > 
+SalesManageController.java > 
+private List<?> salesDataAllD(String month)
+에서 해당 값들을 서버를 통해 xhttp객체에 반환해준다
+
+5.
+chart_daily_bam.jsp >
+xhttp.send(); 와 loader를 통해
+
+총 매출액(원) = total_sale
+거래 수(회) = count_sale
+업체 순 이익(원) = profit
+영업 수수료(원) = earning
+매출 수익률(%) = ROS 
+
+저장 후 각 요소로 보내준다
+
+function redrawChart() 시작=================================================================================================================
+6. => redrawChart
+function redrawChart()
+
+const xhttp = new XMLHttpRequest();
+서버에서 값을 받아오기 위한 객체를 생성한다
+
+xhttp.onreadystatechange = loader;
+readyState가 바뀔때 마다 호출되는 loader 함수
+
+function loader()
+서버에서 값을 정상적으로 받아온다면, 받아온 값을 JSON 문자열의 구문을 분석하고 그 결과에서 객체나 값을 생성한다
+서버에서 받아온 값들을 각각의 요소에 저장하고 이를 #innerData 의 최상단 요소만 로직에 포함시킨다
+
+xhttp.open('GET', './sales_data_bam_d.bam?month='+month, true);
+
+6-1 
+SalesManageController.java > 
+@Autowired
+SalesService service;
+@ResponseBody
+	@RequestMapping(value="sales_data_bam_d.bam", method=RequestMethod.GET, produces="application/json")
+	private List<?> salesDataAllD(String month) {
+		return service.selectDailyAllService(month);
+	}
+
+6-2 
+SalesService > 
+SalesServiceImpl > 
+@Override
+	public List<Revenue> selectDailyAllService(String month) {
+		List<Revenue> list = mapper.selectDailyAll(month);
+		return list;
+	}
+
+6-3
+SalesMapper.java > 
+SalesMapper.xml > 
+<select id="selectDailyAll" resultType="Revenue" parameterType="String">
+			SELECT 
+			SUM(total_fee) as total_sale, SUM(service_fee) as earning, 
+		    SUM(total_fee) - SUM(service_fee) as profit,
+		    ROUND(((SUM(service_fee) / SUM(total_fee) )*100), 2) as ROS,
+		    COUNT(*) as count_sale, 
+			date_format(bdate, '%Y-%m-%d') as day
+		FROM 
+			BOOKING
+		WHERE
+		    date_format(bdate, '%Y-%m')=#{month} and S_NO=1
+		GROUP BY 
+			date_format(bdate, '%Y-%m-%d')
+		ORDER BY 
+			date_format(bdate, '%Y-%m-%d') asc 
+	</select>
+구분(연도) = month
+총 매출액(원) = total_sale 
+거래 수(회) = count_sale
+업체 순 이익(원) = profit
+영업 수수료(원) = earning
+매출 수익률(%) = ROS
+
+6-4 
+SalesMapper.java > 
+SalesServiceImpl > 
+public List<Revenue> selectDailyAllService(String month)
+List<Revenue> 타입의 list에 해당 값들을 저장한다.
+
+SalesService > 
+SalesManageController.java > 
+private List<?> salesDataAllD(String month) 
+위의 값들을 서버를 통해 xhttp에 저장한다
+
+7.
+chart_daily_bam.jsp >
+서버를 통해 받아온 값들이 send()를 통해서 html에서 띄워준다
+
+function redrawChart() 끝=================================================================================================================

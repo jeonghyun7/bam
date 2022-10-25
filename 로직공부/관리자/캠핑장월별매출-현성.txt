@@ -1,0 +1,206 @@
+캠핑장 월별 매출
+(chart_monthly.jsp)
+
+1. jsp 부분
+admin_side_menu.jsp > 
+<a href="sales_camp_monthly.bam"><span>캠핑장 월별 매출</span></a>
+
+2. 
+SalesManageController.java > 
+@RequestMapping("sales_camp_monthly.bam")
+	private String salesChartM() 
+세션이 없으면 return "redirect:login.bam";
+세션이 있으면 return "admin/sales/chart_monthly/"+WebTitle.TITLE+"매출 통계";
+=>
+admin session 여부를 확인하는 메서드
+
+3. ajax 
+chart_monthly.jsp > 
+<table id="camp" class="display" style="width:100%">
+$(document).ready(function() 
+$('#camp').DataTable
+ ajax : { "url": "campData.bam"
+ => 
+ html 부분에서 #camp 를 받아 campData.bam로 Data를 보낸다
+ 
+ 4.
+ 4-1
+ CompanyManageController.java > 
+ @ResponseBody
+	@RequestMapping(value="campData.bam", produces = "application/text; charset=UTF-8")
+	private String campData() {
+		return service.get_campList();
+	}
+=> 최종적으로 CampMapper.xml을 받는다
+
+4-2
+CompanyService >
+CompanyServiceImpl >	
+ public String get_campList() 
+ List<Camp> campList = campMapper.selectCamp();
+ 
+ 4-3
+ CampMapper.java >
+ CampMapper.xml > 
+ <select id="selectCamp" resultType="Camp">
+      select * from CAMP
+ </select>
+ => 
+ 캠핑장 전체 목록을 4-1로 반환한다.
+ 
+ 4-4 
+ CampMapper.xml > 
+ CampMapper.java >
+CompanyServiceImpl >	
+CompanyService >
+CompanyManageController.java > 
+private String campData() 
+=> 캠핑장 전체 목록을 ajax로 반환해준다.
+
+4-5
+chart_monthly.jsp >
+$(document).ready(function
+ajax : 캠핑장 전체 목록
+columns: 차트보기 onclick='drawChart(this)'
+
+4-6
+chart_monthly.jsp >
+function drawChart(e)
+let camp_idx = e.parentElement.nextElementSibling.innerText;
+button의 부모태그의 다음 형제요소에서 텍스트를 가져오거나 바꿔서 camp_idx에 저장한다
+(parentElement : 부모태그를 찾는다, nextElementSibling :  다음 형제요소, innertext : 태그 안의 텍스트를 가져오거나 바꾸는 기능)
+
+const opt = document.querySelectorAll("#year option");
+반환된 html 요소를(#year option) 상대로 자연스럽게 DOM API 에서 제공하는 다른 메서드 사용가능
+
+if(opt[i].value === year)
+만약 아래 구문과 같은 조건이라면
+<select id="year" onchange="redrawChart(this.value)" style="float:right; margin-right:10px;">
+<option value="<c:out value="${sysYear}"/>" selected>${sysYear}</option>
+opt[i].selected = 'selected';를 실행한다
+
+4-7 
+chart_monthly.jsp >
+const xhttp = new XMLHttpRequest(); // xmlHttpRequest 객체 생성하여 
+xhttp.onreadystatechange = loader; //readystate에 변화가생기면 불러야할 함수를 정의한다
+xhttp.open('GET', './sales_data_each_m.bam?camp_idx='+camp_idx+'&year='+year, true); //명시되지 않으면 true로 비동기 통신
+xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded; charset=utf-8'); //http헤더에 들어가는 것
+xhttp.send(); open에서 명시한 request를 서버로 보내게 된다
+이후에 리턴이 잘되었을떄 번호가 200인 경우에 텍스트 출력 가능
+=> 
+
+4-8
+SalesManageController.java > 
+@Autowired
+	SalesService service;
+@RequestMapping(value="sales_data_each_m.bam", method=RequestMethod.GET, produces="application/json")
+	private List<?> salesDataCampM(Integer camp_idx, String year) {
+		return service.selectMonthlyByCampService(camp_idx, year);
+	}
+	
+4-9 
+SalesService.java >
+SalesServiceImpl.java >
+@Override
+	public List<Revenue> selectMonthlyByCampService(int camp_idx, String year) {
+		HashMap<String, Object> query = new HashMap<String, Object>();
+		query.put("camp_idx", camp_idx);
+		query.put("year", year);
+		List<Revenue> list = mapper.selectMonthlyByCamp(query);
+		return list;
+		
+4-10
+SalesMapper.java >
+SalesMapper.xml > 
+<select id="selectMonthlyByCamp" resultType="Revenue" parameterType="hashmap">
+SELECT
+		    c.camp_name,
+		    b.camp_idx,
+			SUM(b.total_fee) as total_sale, SUM(b.service_fee) as earning, 
+		    SUM(b.total_fee) - SUM(b.service_fee) as profit,
+		    ROUND(((SUM(b.total_fee) - SUM(b.service_fee)) / SUM(b.total_fee))*100, 2) as ROS,
+		    COUNT(b.imp_uid) as count_sale, 
+			date_format(b.bdate, '%Y-%m') as month
+		FROM 
+			BOOKING b
+		LEFT OUTER JOIN
+		    CAMP c
+		ON 
+			c.camp_idx = b.camp_idx
+		WHERE
+		    b.CAMP_IDX=#{camp_idx} and date_format(b.bdate, '%Y')=#{year} and b.S_NO=1
+		GROUP BY 
+			date_format(b.bdate, '%Y-%m'), c.camp_name, b.camp_idx
+		ORDER BY 
+			date_format(bdate, '%Y-%m') asc
+=>
+select >
+camp 테이블의 camp_name, booking테이블의 camp_idx
+
+booking 테이블의 total_fee 의 합을 total_sale, booking 테이블의 service_fee의 합은 earning, 
+
+booking 테이블의 total_fee의 합 - booking 테이블의 service_fee는 profit 으로 지정한다, 
+
+(booking 테이블의 total_fee의 합 - booking 테이블의 service_fee )를 booking 테이블의 total_fee로 나누고 100을 곱하여, 
+반올림하여 소수점 2자리 까지는 표기한 것을 ROS, 
+
+booking 테이블의 imp_uid 의 개수를 count_sale 라고 지정한다, 
+
+booking 테이블의 bdate를 연도-월 형식으로 표현하는 메소드를  month라고한다.
+
+from > 
+booking 테이블과 LEFT OUTER JOIN camp 테이블
+왼쪽 테이블의 값 즉 booking 테이블의 값은 모두 나오지만 오른쪽 테이블의 값은 왼쪽 테이블과 겹치는 부분만 나온다
+여기서 on에 의해서 camp 테이블의 camp_idx와 booking 테이블의 camp_idx가 같다
+
+where > 
+booking 테이블의 CAMP_IDX에는 camp_idx값,  booking 테이블의 bdate의 년도, booking 테이블의 S_NO가 1일 때
+group by>
+booking 테이블의 bdate 를 Y-m 형태로 저장, camp 테이블의 camp_name, booking 테이블의 camp_idx 별로 그룹화한다
+ORDER BY >
+booking 테이블의 bdate를 Y-m 형태로 오름차순으로 한다
+
+month= 구분(월)
+total_sale =총 매출액(원)
+count_sale =거래 수(회)
+profit = #순 이익 : (총 매출액 - 영업 수수료)
+earning =영업 수수료(원)
+ROS = #매출 수익률 : (순 이익/총 매출) X 100
+의 결과를 resultType="Revenue" 으로 
+
+4-11
+SalesMapper.xml > 
+SalesMapper.java >
+SalesServiceImpl.java >
+public List<Revenue> selectMonthlyByCampService(int camp_idx, String year)
+List<Revenue> list = mapper.selectMonthlyByCamp(query);
+		return list;
+=> 구분, 총 매출액, 거래 수, 순 이익, 영업 수수료, 매출 수익률 을 리스트 클래스<Revenue> 타입으로 저장하여 반환해준다
+
+SalesService.java >
+SalesManageController.java > 
+private List<?> salesDataCampM(Integer camp_idx, String year) 
+		return service.selectMonthlyByCampService(camp_idx, year);
+리스트 타입으로 저장된 값을 ajax로 반환해준다
+
+5. 다시 ajax로 돌아옴
+chart_monthly.jsp > 
+xhttp.onreadystatechange가 여러번 호출되는데.  readyState가 잘 리턴되었을때의 번호가 200인 경우에만 텍스트를 출력할 수 있게 합니다.
+if(status === 200) 조건이 발동되어 
+
+for(let i=0;i<jsonObj.length;i++)
+tempStr 에 구분, 총 매출액, 거래 수, 순 이익, 영업 수수료, 매출 수익률을 저장한다
+추후에 형식에 맞게끔 month를 수정한다
+
+document.querySelector("#innerData").innerHTML = tempStr;
+document.querySelector("#camp_name").innerText = jsonObj[0].camp_name;
+document.querySelector("#camp_idx").value = jsonObj[0].camp_idx;
+<tbody id="innerData">
+<span id="camp_name">캠핑장 명</span>
+<input id="camp_idx" type="hidden" value="">
+해당 id값들에 해당 값들을 넣어준다
+
+
+
+
+	

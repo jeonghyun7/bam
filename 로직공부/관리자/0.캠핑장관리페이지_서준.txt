@@ -1,0 +1,149 @@
+##################################################################################
+admin_side_menu.jsp에서 캠핑장 관리 버튼 클릭시
+
+href로 인해 "camp_manage.bam"으로 이동
+
+==========================================================================
+@RequestMapping("camp_manage.bam")호출
+
+private String campManage 메소드 실행
+
+if통해 세션 만료되면 redirect:../admin/login.bam경로로 다시 로그인창으로 이동하고
+
+그게 아니면 "admin/company/camp_manage/"+WebTitle.TITLE+"캠핑 관리" 경로로 이동
+
+==========================================================================
+리스트 띄우기!!!!(camp_manage.jsp)
+
+로직순서대로 타고 들어가다 id="example2"======함수 찾아가면 
+
+$(document).ready(function()함수의 의해 페이지가 실행되면 발동
+
+(DataTables란 데이터를 테이블로 쉽게 표현하고 다양한 기능을 제공하는 라이브러리)---제이쿼리
+
+pageLength : 10,//row열 10개 
+bPaginate : true,//데이터 테이블에서 페이지 매김 제거
+
+
+ajax실행----- url=campData.bam((type=post))
+=======================================================================
+CompanyManageController.java
+
+@RequestMapping(value="campData.bam" )에 의해 private String campData 메소드 실행
+return 값으로 service.get_campList() 값을 주니 이 값을 얻으로 service로 가볼까???
+
+=======================================================================
+CompanyServiceImpl.java
+
+public String get_campList() 메서드실행
+
+campList에 campMapper.selectCamp()쿼리 실행해서 받은 값은 resultType으로 camp타입으로 반환 
+
+로직에 따라 for으로 값들을 넣어주고 그 값들을 jArray 에 넣어준다. 
+
+그 값을 toString 형으로 resp에 저장해주고 리턴한다.
+
+Controller에 return 값을 주고 ajax실행 column값으로 디비에서 받은 값을 표시해주고
+
+(Datatable은 jquery라이브 러리 입니다.) 해석은 해보려 했는데 제가 찾기부족인가 아직 해석은 못했습니다.
+
+
+$('#example2 tbody').on('click', 'td.details-control', function () 함수에 의해 click클릭시 함수 발동 
+
+if를 통해 창이 오픈되어 있으면 창을 닫아주고 그렇지 않으면 else구문으로 들어와서 
+format함수 호출!!!!
+
+function format (d) 함수로 return 값을준다.
+
+<form action="campEdit.bam" method="post">값으로 form안에 있는 값들을 보내준다
+
+form안을 살펴보면 (주요메서드)
+
+<input type="button" class="btn btn-outline-danger" id="del_camp" value="삭제">
+
+id = del_camp로 되어있는 스크립트 함수 구문 실행
+$("#del_camp").click(function(e){'+
+	'e.preventDefault();'+
+	'$("#testModal").modal("show");
+#testmodal 값의 modal("show") 의 id=testmodal
+그 값을 모달로 보여 준다.
+
+<input type="button" class="btn btn-outline-primary" value="수정" onclick="changeOnChild(this)">
+
+onclick시 발생하는 메소드 changeOnchild실행
+
+function changeOnChild(e){	
+			e.nextElementSibling.style.display = "inline";
+       	 	e.style.display = "none";
+       	 	const list = document.querySelectorAll('.child');
+       	 	for (let i of list){
+	       	 	i.readOnly = false;
+	       	 	//alert("i: " +i);
+	       	 	i.style.border = 'solid 1px #d0cfcf';
+	       	 	i.style.background = '#efefef';
+       	 	}
+		}
+스타일 형식을 지정해주는 함수
+
+<div class="modal fade" id="testmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true"> 값을 따라 id가 testmodal을 따라가면
+
+
+'$("#testModal").modal("show") 이부분에 의해 모달이 나타납니다.
+
+<a class="btn" id="modalY" style="color:red !important;" href="campDel.bam?camp_idx='+d.camp_idx+'"> 이 부분을 통해 campDel.bam경로를 지정해주고
+
+controller로 돌아가서 @getMapping("campDel.bam")으로 가서 
+
+private String campDelete(Long camp_idx) 메서드 실행
+
+값을 가져오기 위해 service로 이동한다. 
+
+서비스 안의 campMapper.deleteCamp(camp_idx)로 인해 db값을가져옵니다
+
+로직을 따라 다시 컨트롤러 까지 오고 
+
+최종적으로 form 안에 담긴 데이터를 틀고 action="campEdit.bam" 으로 이동합니다.
+
+===============================================================
+CompanyManageController.java
+
+private String campEdit(Camp camp) 메소드 실행 
+
+service.Edit_campList(camp) 이값을 받아오기 위해 service로 이동
+
+===============================================================
+CompanyServiceImpl.java 의 이값은
+
+campMapper.updateCamp(camp)
+
+update CAMP set CAMP_NAME=#{camp_name}, ADDRESS=#{address}, CAMP_TEL=#{camp_tel}, 
+      SITE_NUM=#{site_num}, FULL_NUM=#{full_num}, PARKING=#{parking}, CONV=#{conv}, SEC_CONV=#{sec_conv}, ETC_CONV=#{etc_conv}, 
+      AGENCY_TEL=#{agency_tel}, AGENCY_NAME=#{agency_name}, INTRO=#{intro} where CAMP_IDX=#{camp_idx}
+
+쿼리문에 의해 값을 받아오고 그 값을 service->Controller로 돌아가 return 값으로 redirect:camp_manage.bam 보내준다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

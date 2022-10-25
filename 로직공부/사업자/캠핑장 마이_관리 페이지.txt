@@ -1,0 +1,109 @@
+#캠핑장관리(camp_manage.jsp)#
+
+(1) my_page.jsp(마이페이지)
+
+사업자일경우 캠핑장 정보 버튼과 캠핑장관리 버튼이 생김(c:if태그로)
+캠핑장관리버튼 클릭
+onclick="start_camp_manage(true, true, false, 1); 이벤트 발생.
+
+(2) camp-manage.js
+function start_camp_manage(isAsync, isMore, isSearch, currentPage){ 함수발동~
+
+뷰에서 받아온 값들을 sendData 변수에 저장하고  ajax방식으로 그data를 POST방식으로 
+맵핑된 url인 url: "../owner/camp_manage" 에 찾아간다. 데이터타입은 HTML임
+
+(3) OwnerController.java
+ 
+@PostMapping("camp_manage")
+	private ModelAndView get_booking_info( 맵핑된 메서드 시작
+ownerService.get_booking_info_service(currentPage, isMore, isSearch, keyword, category);
+구문을 통해 서비스 단으로 찾아가기~
+
+(4) OwnerServiceImpl.java
+
+@Override
+	public ModelAndView get_booking_info_service(
+메서드 안에서 페이지유틸 클래스를 활용하여
+cureentPage 1개 의 페이지에 pageSize 3개 까지 뜰 수 있게 끔 설정
+멤버 속성들을 가져와 Member형 user 변수에 저장해준다. 그 다음~
+ :: Camp camp = manageMapper.select_owner_camp(user.getEmail());
+구문에 의해 매퍼 파일 찾아가기~
+
+(5) BookingManageMapper.xml
+<!-- 사업자테이블과 캠프테이블 조인을 건후 받아온 이메일과 비교하여 일치하는 사업자가 운영하는 캠핑장 컬럼값들을 가져감 -->
+
+<select id="select_owner_camp" resultType="Camp" parameterType="String">
+	select * from OWNER join CAMP on OWNER.CAMP_IDX = CAMP.CAMP_IDX where EMAIL = #{email}
+</select>
+SQL을 통해 뽑아진 정보들을 캠프타입으로 반환한다.
+
+(6) OwnerServiceImpl.java
+뽑아진 정보들을 Camp camp에 담고 그 값이 null값이 아니라면 if문 안으로 들어갑니다~
+DateUtil클래스를 선언하고 오늘날짜를 today변수에 넣고 그값과 camp_idx값을 쿼리에 담습니다.
+그리고 isSearch 검색여부 true false 값에 따라 쿼리에 추가적으로 담아주고 카테고리(이름or전화번호)와
+키워드값도 쿼리에 추가 합니다. 쿼리에 담긴 모든 값들을 가지고~
+
+ :: long listCount = manageMapper.select_count_booking_list(query);
+구문에 의해 매퍼 파일을 찾아갑니다.
+
+(7) BookingManageMapper.xml
+<!--오늘 날짜에 예약된 예약데이터의 총 개수 요청하는 쿼리 -->
+	<select id="select_count_booking_list" resultType="long" parameterType="hashmap">
+찾아온 SQL문을 통해 오늘날짜에 예약된 예약데이터의 총 개수를 가지고 반환합니다.
+
+(8) OwnerServiceImpl.java
+
+long listCount = 반환받은 갯수를 변수에 담고 
+Pagination page 변수에 그 값도 넣어줍니다 (+현재페이지와 , 그안에 나타낼 최대갯수pageSize까지)
+
+저장소 reponse에 키-campSize/ 값 -사이트갯수 도 넣어주고
+
+예약데이터의 총 갯수 listCount가 0이라면 if문안으로 들어가서 using/notUsing/endUsing에 모두 0값을 넣고 반환
+아니라면 Pagination page 변수를 쿼리문에 넣고
+ :: List<BookingInfo> list = manageMapper.select_booking_list(query);
+구문에 의해 매퍼 파일을 찾아 이동합니다.~
+
+(9) BookingManageMapper.xml
+<!--예약된 예약데이터를 요청하는 쿼리  -->
+	<select id="select_booking_list" resultType="com.bam.model.BookingInfo" parameterType="hashmap">
+해당 구문을 통해 예약된 데이터들을 BookingInfo타입으로 반환합니다.
+
+(10) OwnerServiceImpl.java
+
+List<BookingInfo> list = list변수에 SQL통해 반환받아온 예약 데이터들을 담습니다. 
+
+저장소 response에 list 와 page 를 담습니다.
+쿼리문에 using_state U / F / T 값을 넣은 뒤 각각 
+manageMapper.select_count_using_state(query) 매퍼 파일로 이동합니다.
+
+(11) BookingManageMapper.xml
+
+<!-- 미완료된 예약데이터의 개수를 요청 -->	
+	<select id="select_count_using_state" resultType="int" parameterType="hashmap">
+SQL문을 통해 using_state U(이용전) / F(이용중) / T(이용완료) 
+이용상태에 따른 데이터들의 갯수를 반환해줍니다.
+
+(12) OwnerServiceImpl.java
+저장소 reponse에 using -(갯수) notUsing-(갯수) endUsing-(갯수)를 담고 컨트롤러로 반환합니다.
+
+(13) OwnerController.java
+반환받은 값을 다시 저장소 response에 담아주고 
+response.setViewName("client/member/camp_manage");
+이동할 뷰이름 설정후 호출한(ajax)곳에 반환해줍니다.~
+
+(14) camp-manage.js
+success: function(responseData){
+            $('#camp-manage-box').html(responseData);
+
+성공적으로 반환되었다면 
+
+(15)my_page.jsp
+마이페이지 div 박스
+<div id="camp-manage-box"></div> div 박스안에 
+.html(responseData); 의하여 
+
+!!!!!!!!!!!!!!!!camp_manage.jsp가 나타나게 됩니다.
+
+(16) camp_manage.jsp 
+뷰 자체에서 볼 만 한 내용은 
+onclick="change_using_state밖에 없습니다~ 알아서들 확인혀봐유 궁금하면?!
